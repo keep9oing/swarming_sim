@@ -40,8 +40,8 @@ import lemni_tools
 Ti = 0         # initial time
 Tf = 30         # final time 
 Ts = 0.02      # sample time
-nVeh = 7       # number of vehicles
-iSpread = 50   # initial spread of vehicles
+nVeh = 30       # number of vehicles
+iSpread = 500   # initial spread of vehicles
 
 tactic_type = 0     # [0 = dirty_flock, 1 = flock, 2 = circle, 8 = lemniscate]
 
@@ -201,7 +201,7 @@ while round(t,3) < Tf:
     
     # Evolve the target
     # -----------------
-    tSpeed = 10
+    tSpeed = 3
     targets[0,:] = targets[0,:] + tSpeed*0.002
     targets[1,:] = targets[1,:] + tSpeed*0.005
     targets[2,:] = targets[2,:] + tSpeed*0.0005
@@ -257,9 +257,9 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
-    d = 2                       # lattice scale (distance between a-agents)
-    r = 10 #2*d                   # interaction range of a-agents
-    d_prime = 0.5 #0.6*d          # distance between a- and b-agents
+    d = 5                       # lattice scale (distance between a-agents)
+    r = 2*d                   # interaction range of a-agents
+    d_prime = 2 #0.6*d          # distance between a- and b-agents
     r_prime = 2*d_prime         # interaction range of a- and b-agents
     
     # Add other vehicles as obstacles (optional, default = 0)
@@ -273,7 +273,7 @@ while round(t,3) < Tf:
             
     # Compute the commads (next step)
     # --------------------------------       
-    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type)
+    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid)
        
         
     

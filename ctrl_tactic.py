@@ -30,11 +30,13 @@ c2_g = 2*np.sqrt(3)
 c1_d = 2                # encirclement 
 c2_d = 2*np.sqrt(2)
 
-cd_1 = 1    # cohesion
-cd_2 = 0    # alignment
-cd_3 = 0    # separation
-cd_4 = 0    # navigation (default not used)
-
+cd_1 = 0.7    # cohesion
+cd_2 = 0.9    # alignment
+cd_3 = 0.2    # separation
+cd_4 = 0   # navigation (default 0)
+maxu = 100   # max input
+maxv = 100  # max v
+far_away = 300 # when to go back to centroid
 
 # Some function that are used often
 # ---------------------------------
@@ -90,7 +92,7 @@ def phi_b(q_i, q_ik, d_b):
     
 # Tactic Command Equations 
 # ------------------------
-def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type):   
+def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid):   
     
     
     # initialize 
@@ -131,7 +133,10 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             sum_poses = np.zeros((3))
             sum_velos = np.zeros((3))
             sum_obs = np.zeros((3))
-            maxv = 200
+            #maxv = 200
+            u_dirty_1 = np.zeros((3,states_q.shape[1]))  # cohesion
+            u_dirty_2 = np.zeros((3,states_q.shape[1]))  # alignment
+            u_dirty_3 = np.zeros((3,states_q.shape[1]))  # separation
 
               
             # search through each neighbour
@@ -142,22 +147,24 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                     dist = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
                     
                     if dist == 0:
-                        print('collision')
+                        print('collision at agent: ', k_node)
                         continue
 
                     # if it is within the interaction range
                     if dist < r:
                         # count
-                        temp_total += 1
+                        temp_total += 1                        
                                                 
                         # cohesion                        
                         #u_dirty_1[:,k_node] += cd_1*sigma_norm(states_q[:,k_neigh]-states_q[:,k_node])
                         
                         #sum of positions
+                        
                         sum_poses += states_q[:,k_neigh]
                         sum_velos += states_p[:,k_neigh]
+                        
                         #sum_obs += states_q[:,k_neigh]/dist
-                        sum_obs += (states_q[:,k_node]-states_q[:,k_neigh])/dist
+                        sum_obs += -(states_q[:,k_node]-states_q[:,k_neigh])#/dist
                         
                         # alignment
                         #u_dirty_2[:,k_node] += cd_2*sigma_norm(states_p[:,k_neigh]-states_p[:,k_node]) 
@@ -187,10 +194,12 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                     
                     # new
                     #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,temp_total) - states_q[:,k_node]))/10 
-                    u_dirty_1[:,k_node] = cd_1*(maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
+                    #u_dirty_1[:,k_node] = cd_1*(maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
                     #norm1b = np.linalg.norm(u_dirty_1[:,k_node])
                     #u_dirty_1[:,k_node] = cd_1*(u_dirty_1[:,k_node])/norm1b
-          
+                    u_dirty_1[:,k_node] = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
+                    norm1b = np.linalg.norm(u_dirty_1[:,k_node])
+                    u_dirty_1[:,k_node] = cd_1*maxu*np.divide(u_dirty_1[:,k_node],norm1b)
                     
 
             #print(u_dirty_1[:,k_node])
@@ -216,9 +225,12 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                     #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
             
                     #new
-                    u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+                    #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node]) # for sure worx
                     #norm2b = np.linalg.norm(u_dirty_2[:,k_node])
                     #u_dirty_2[:,k_node] = cd_2*(u_dirty_2[:,k_node])/norm2b
+                    u_dirty_2[:,k_node] = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+                    norm2b = np.linalg.norm(u_dirty_2[:,k_node])
+                    u_dirty_2[:,k_node] = cd_2*maxu*np.divide(u_dirty_2[:,k_node],norm2b)
                     
 
 
@@ -237,20 +249,24 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001))))/10
            
             norm3 = np.linalg.norm(sum_obs)
-            if norm3 != 0:
-                if temp_total != 0:
-                    
-                    # velocity to center of mass
-                    #obs= np.divide(sum_obs,temp_total)
-                    #v_obs = maxv*np.divide(obs,norm3)
-                    #u_dirty_3[:,k_node] = cd_3*(v_obs-states_p[:,k_node])/10
-                    
-                    #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,temp_total)))/10
-                    u_dirty_3[:,k_node] =cd_3*(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) 
-                    #norm3b = np.linalg.norm(u_dirty_3[:,k_node])
-                    #u_dirty_3[:,k_node] = cd_3*(u_dirty_3[:,k_node])/norm3b
-        
-                                        
+            
+            if dist < r_prime:
+                if norm3 != 0:
+                    if temp_total != 0:
+                        
+                        # velocity to center of mass
+                        #obs= np.divide(sum_obs,temp_total)
+                        #v_obs = maxv*np.divide(obs,norm3)
+                        #u_dirty_3[:,k_node] = cd_3*(v_obs-states_p[:,k_node])/10
+                        
+                        #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,temp_total)))/10
+                        #u_dirty_3[:,k_node] =cd_3*(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) # for sure worx
+                        #norm3b = np.linalg.norm(u_dirty_3[:,k_node])
+                        #u_dirty_3[:,k_node] = cd_3*(u_dirty_3[:,k_node])/norm3b
+                        u_dirty_3[:,k_node] =(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) 
+                        norm3b = np.linalg.norm(u_dirty_3[:,k_node])
+                        u_dirty_3[:,k_node] = -cd_3*maxu*np.divide(u_dirty_3[:,k_node],norm3b)
+                                            
             
             #print(u_dirty_3[:,k_node])
 
@@ -260,9 +276,22 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             #u_nav[:,k_node] = cd_4*sigma_1(targets[:,k_node]-states_q[:,k_node]) 
             #u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node])
             #u_nav[:,k_node] = cd_4*((targets[:,k_node]-states_q[:,k_node])-states_p[:,k_node])
-            u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node])
+            #u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node]) # works for sure
             #norm4b = np.linalg.norm(u_nav[:,k_node])
             #u_nav[:,k_node] = cd_4*(u_nav[:,k_node])/norm4b
+            
+            
+            if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
+                cd_4 = 0.1
+            else:
+                cd_4 = 0
+                
+            
+            #u_nav[:,k_node] = (targets[:,k_node]-states_q[:,k_node])
+            u_nav[:,k_node] = (centroid.transpose()-states_q[:,k_node])
+            norm4b = np.linalg.norm(u_nav[:,k_node])
+            u_nav[:,k_node] = cd_4*maxu*np.divide(u_nav[:,k_node],norm4b)
+
             
             
             #print(u_nav[:,k_node])

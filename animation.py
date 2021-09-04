@@ -41,7 +41,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
     x_v = states_all[:,3,:]
     y_v = states_all[:,4,:]
     z_v = states_all[:,5,:]
-    head = 5
+    head = 50
     x_head = states_all[:,0,:] + head*x_v
     y_head = states_all[:,1,:] + head*x_v
     z_head = states_all[:,2,:] + head*x_v
