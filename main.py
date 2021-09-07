@@ -38,9 +38,9 @@ import lemni_tools
 #%% Setup Simulation
 # ------------------
 Ti = 0         # initial time
-Tf = 30         # final time 
+Tf = 60         # final time 
 Ts = 0.02      # sample time
-nVeh = 20      # number of vehicles
+nVeh = 50      # number of vehicles
 iSpread = 300   # initial spread of vehicles
 
 tactic_type = 0     # [0 = dirty_flock, 1 = flock, 2 = circle, 8 = lemniscate]

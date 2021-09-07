@@ -154,7 +154,7 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             
             # adjust cohesion range for min number of agents 
             r_coh = 0
-            agents_min_coh = 3
+            agents_min_coh = 5
             node_ranges = distances[k_node,:]
             node_ranges_sorted = np.sort(node_ranges)
             r_coh_temp = node_ranges_sorted[agents_min_coh+1]
