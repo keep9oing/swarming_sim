@@ -18,7 +18,7 @@ writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 10 # frame rate (bigger = slower)
 tail = 10
-zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
+zoom = 0    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 
 
