@@ -18,7 +18,7 @@ writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 10 # frame rate (bigger = slower)
 tail = 10
-zoom = 0    # do you want to adjust frames with motion? [0 = no, 1 = yes]
+zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 
 
@@ -75,6 +75,14 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
     ax.set_ylabel('y-direction')
     ax.set_zlim3d([mid_z-maxRange, mid_z+maxRange])
     ax.set_zlabel('Altitude')
+    
+    if zoom == 2:
+        fixed_axis = 1000
+        ax.set_xlim3d([-fixed_axis, fixed_axis])
+        ax.set_ylim3d([-fixed_axis, fixed_axis])
+        ax.set_zlim3d([-fixed_axis, fixed_axis])
+
+    
     
     # labels
     # ------
@@ -195,7 +203,16 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
             ax.set_xlim3d([mid_x-maxRange, mid_x+maxRange])
             ax.set_ylim3d([mid_y-maxRange, mid_y+maxRange])
             ax.set_zlim3d([mid_z-maxRange, mid_z+maxRange])
+        elif zoom == 3:
+            fixed_zoom = 300
+            cmid_x = 0.5*(cx.max()+cx.min())
+            cmid_y = 0.5*(cy.max()+cy.min())
+            cmid_z = 0.5*(cz.max()+cz.min())
+            ax.set_xlim3d([cmid_x-fixed_zoom, cmid_x+fixed_zoom])
+            ax.set_ylim3d([cmid_y-fixed_zoom, cmid_y+fixed_zoom])
+            ax.set_zlim3d([cmid_z-fixed_zoom, cmid_z+fixed_zoom])
 
+            
         
         
         # build lattice

@@ -30,8 +30,8 @@ c2_g = 2*np.sqrt(3)
 c1_d = 2                # encirclement 
 c2_d = 2*np.sqrt(2)
 
-cd_1 = 0.7    # cohesion
-cd_2 = 0.9    # alignment
+cd_1 = 0.5    # cohesion
+cd_2 = 0.7    # alignment
 cd_3 = 0.2    # separation
 cd_4 = 0   # navigation (default 0)
 maxu = 100   # max input
@@ -44,7 +44,6 @@ far_away = 300 # when to go back to centroid
 def regnorm(z):
     norm = np.divide(z,np.linalg.norm(z))
     return norm
-
 
 def sigma_norm(z):    
     norm_sig = (1/eps)*(np.sqrt(1+eps*np.linalg.norm(z)**2)-1)
@@ -89,6 +88,13 @@ def phi_b(q_i, q_ik, d_b):
     phi_b = rho_h(z/d_b) * (sigma_1(z-d_b)-1)    
     return phi_b
 
+# Reynolds flocking functions 
+def norm_sat(u,maxu):
+    norm1b = np.linalg.norm(u)
+    u_out = maxu*np.divide(u,norm1b)
+    return u_out
+
+
     
 # Tactic Command Equations 
 # ------------------------
@@ -130,13 +136,14 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             
             #initialize for this node
             temp_total = 0
+            temp_total_prime = 0
             sum_poses = np.zeros((3))
             sum_velos = np.zeros((3))
             sum_obs = np.zeros((3))
             #maxv = 200
-            u_dirty_1 = np.zeros((3,states_q.shape[1]))  # cohesion
-            u_dirty_2 = np.zeros((3,states_q.shape[1]))  # alignment
-            u_dirty_3 = np.zeros((3,states_q.shape[1]))  # separation
+            u_coh = np.zeros((3,states_q.shape[1]))  # cohesion
+            u_ali = np.zeros((3,states_q.shape[1]))  # alignment
+            u_sep = np.zeros((3,states_q.shape[1]))  # separation
 
               
             # search through each neighbour
@@ -152,152 +159,54 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
 
                     # if it is within the interaction range
                     if dist < r:
+ 
                         # count
                         temp_total += 1                        
-                                                
-                        # cohesion                        
-                        #u_dirty_1[:,k_node] += cd_1*sigma_norm(states_q[:,k_neigh]-states_q[:,k_node])
-                        
+             
                         #sum of positions
-                        
                         sum_poses += states_q[:,k_neigh]
                         sum_velos += states_p[:,k_neigh]
                         
-                        #sum_obs += states_q[:,k_neigh]/dist
-                        sum_obs += -(states_q[:,k_node]-states_q[:,k_neigh])#/dist
+                    # if within the separation range 
+                    if dist < r_prime:
                         
-                        # alignment
-                        #u_dirty_2[:,k_node] += cd_2*sigma_norm(states_p[:,k_neigh]-states_p[:,k_node]) 
-                        # separation
-                        #u_dirty_3[:,k_node] += cd_3*sigma_norm(states_q[:,k_node]-states_q[:,k_neigh])
-  
-    
+                        # count
+                        temp_total_prime += 1 
+                        sum_obs += -(states_q[:,k_node]-states_q[:,k_neigh])/(dist**2)                        
 
-            # COHESION
-            # -------
-            
-            #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node]) -states_p[:,k_node])
-            #u_dirty_1[:,k_node] = cd_1*(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
-            #u_dirty_1[:,k_node] = cd_1*sigma_1(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
-            #u_dirty_1[:,k_node] = cd_1*(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
-            #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])-states_p[:,k_node])
-            #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node]))/10 # works
-            
             norm1 = np.linalg.norm(sum_poses)
+            norm2 = np.linalg.norm(sum_velos)
+            norm3 = np.linalg.norm(sum_obs)
+  
             if norm1 != 0:
                 if temp_total != 0:
                     
-                    # velocity to center of mass
-                    #com = np.divide(sum_poses,temp_total)
-                    #v_com = maxv*np.divide(com - states_q[:,k_node],norm1)
-                    #u_dirty_1[:,k_node] = cd_1*(v_com-states_p[:,k_node])/10
+                    # Cohesion
+                    temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node])
+                    u_coh[:,k_node] = cd_1*norm_sat(temp_u_coh,maxu)
                     
-                    # new
-                    #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,temp_total) - states_q[:,k_node]))/10 
-                    #u_dirty_1[:,k_node] = cd_1*(maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
-                    #norm1b = np.linalg.norm(u_dirty_1[:,k_node])
-                    #u_dirty_1[:,k_node] = cd_1*(u_dirty_1[:,k_node])/norm1b
-                    u_dirty_1[:,k_node] = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
-                    norm1b = np.linalg.norm(u_dirty_1[:,k_node])
-                    u_dirty_1[:,k_node] = cd_1*maxu*np.divide(u_dirty_1[:,k_node],norm1b)
-                    
+                    # Alignment                 
+                    temp_u_ali = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+                    u_ali[:,k_node] = cd_2*norm_sat(temp_u_ali,maxu)
 
-            #print(u_dirty_1[:,k_node])
-    
-
-            # ALIGNMENT
-            # --------
-            
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_q[:,k_node])
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001))) #- states_q[:,k_node])
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001))) 
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
-            #u_dirty_2[:,k_node] = cd_2*sigma_1(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
-            
-            #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)))/10  # works
-            
-            
-            norm2 = np.linalg.norm(sum_velos)
-            if norm2 != 0:
-                if temp_total != 0:
-                    
-                    #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
-            
-                    #new
-                    #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node]) # for sure worx
-                    #norm2b = np.linalg.norm(u_dirty_2[:,k_node])
-                    #u_dirty_2[:,k_node] = cd_2*(u_dirty_2[:,k_node])/norm2b
-                    u_dirty_2[:,k_node] = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
-                    norm2b = np.linalg.norm(u_dirty_2[:,k_node])
-                    u_dirty_2[:,k_node] = cd_2*maxu*np.divide(u_dirty_2[:,k_node],norm2b)
-                    
-
-
-
-            #print(u_dirty_2[:,k_node])
-
-            
-            # SEPARATION
-            # ----------
-               
-            #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001))) - states_p[:,k_node])
-            #u_dirty_3[:,k_node] = -cd_3*(np.divide(sum_obs,np.maximum(temp_total,0.001)))
-            #u_dirty_3[:,k_node] = -cd_3*sigma_1(np.divide(sum_obs,np.maximum(temp_total,0.001)))
-            #u_dirty_3[:,k_node] = -cd_3*(np.divide(sum_obs,np.maximum(temp_total,0.001)))
-            #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001)))- states_p[:,k_node])
-            #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001))))/10
-           
-            norm3 = np.linalg.norm(sum_obs)
-            
-            if dist < r_prime:
-                if norm3 != 0:
-                    if temp_total != 0:
+                    # Separtion
+                    if temp_total_prime != 0:
                         
-                        # velocity to center of mass
-                        #obs= np.divide(sum_obs,temp_total)
-                        #v_obs = maxv*np.divide(obs,norm3)
-                        #u_dirty_3[:,k_node] = cd_3*(v_obs-states_p[:,k_node])/10
+                        temp_u_sep = (maxv*np.divide(((np.divide(sum_obs,temp_total_prime))),norm3)-states_p[:,k_node]) 
+                        u_sep[:,k_node] = -cd_3*norm_sat(temp_u_sep,maxu)
                         
-                        #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,temp_total)))/10
-                        #u_dirty_3[:,k_node] =cd_3*(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) # for sure worx
-                        #norm3b = np.linalg.norm(u_dirty_3[:,k_node])
-                        #u_dirty_3[:,k_node] = cd_3*(u_dirty_3[:,k_node])/norm3b
-                        u_dirty_3[:,k_node] =(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) 
-                        norm3b = np.linalg.norm(u_dirty_3[:,k_node])
-                        u_dirty_3[:,k_node] = -cd_3*maxu*np.divide(u_dirty_3[:,k_node],norm3b)
-                                            
-            
-            #print(u_dirty_3[:,k_node])
-
-
-            # target tracking 
-            #u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node]) 
-            #u_nav[:,k_node] = cd_4*sigma_1(targets[:,k_node]-states_q[:,k_node]) 
-            #u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node])
-            #u_nav[:,k_node] = cd_4*((targets[:,k_node]-states_q[:,k_node])-states_p[:,k_node])
-            #u_nav[:,k_node] = cd_4*(targets[:,k_node]-states_q[:,k_node]) # works for sure
-            #norm4b = np.linalg.norm(u_nav[:,k_node])
-            #u_nav[:,k_node] = cd_4*(u_nav[:,k_node])/norm4b
-            
+            # TRACKING
+            # --------           
             
             if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
-                cd_4 = 0.1
+                cd_4 = 0.05
             else:
                 cd_4 = 0
-                
-            
-            #u_nav[:,k_node] = (targets[:,k_node]-states_q[:,k_node])
-            u_nav[:,k_node] = (centroid.transpose()-states_q[:,k_node])
-            norm4b = np.linalg.norm(u_nav[:,k_node])
-            u_nav[:,k_node] = cd_4*maxu*np.divide(u_nav[:,k_node],norm4b)
 
+            temp_u_nav = (centroid.transpose()-states_q[:,k_node])
+            u_nav[:,k_node] = cd_4*norm_sat(temp_u_nav,maxu)
             
-            
-            #print(u_nav[:,k_node])
-            #print('====')
-        
-        
+
         # if flocking                                 
         if tactic_type == 1:
         
@@ -387,10 +296,154 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         if tactic_type == 1:
             cmd_i[:,k_node] = u_int[:,k_node] + u_obs[:,k_node] + u_nav[:,k_node] 
         elif tactic_type == 0:
-            cmd_i[:,k_node] = u_dirty_1[:,k_node] + u_dirty_2[:,k_node] + u_dirty_3[:,k_node] + u_nav[:,k_node] 
+            cmd_i[:,k_node] = u_coh[:,k_node] + u_ali[:,k_node] + u_sep[:,k_node] + u_nav[:,k_node] 
         else:
             cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node] 
 
     cmd = cmd_i    
     
     return cmd
+
+
+#%% LEGACY 
+
+
+                    # # if it is within the interaction range
+                    # if dist < r:
+                    #     # count
+                    #     temp_total += 1                        
+                                                
+                    #     # cohesion                        
+                    #     #u_dirty_1[:,k_node] += cd_1*sigma_norm(states_q[:,k_neigh]-states_q[:,k_node])
+                        
+                    #     #sum of positions
+                        
+                    #     sum_poses += states_q[:,k_neigh]
+                    #     sum_velos += states_p[:,k_neigh]
+                        
+                    #     #sum_obs += states_q[:,k_neigh]/dist
+                    #     sum_obs += -(states_q[:,k_node]-states_q[:,k_neigh])/(dist**2)
+                        
+                    #     # alignment
+                    #     #u_dirty_2[:,k_node] += cd_2*sigma_norm(states_p[:,k_neigh]-states_p[:,k_node]) 
+                    #     # separation
+                    #     #u_dirty_3[:,k_node] += cd_3*sigma_norm(states_q[:,k_node]-states_q[:,k_neigh])
+
+
+          # #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node]) -states_p[:,k_node])
+          #   #u_dirty_1[:,k_node] = cd_1*(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
+          #   #u_dirty_1[:,k_node] = cd_1*sigma_1(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
+          #   #u_dirty_1[:,k_node] = cd_1*(np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])
+          #   #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node])-states_p[:,k_node])
+          #   #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,np.maximum(temp_total,0.001)) - states_q[:,k_node]))/10 # works
+            
+          #   norm1 = np.linalg.norm(sum_poses)
+          #   if norm1 != 0:
+          #       if temp_total != 0:
+                    
+          #           # velocity to center of mass
+          #           #com = np.divide(sum_poses,temp_total)
+          #           #v_com = maxv*np.divide(com - states_q[:,k_node],norm1)
+          #           #u_dirty_1[:,k_node] = cd_1*(v_com-states_p[:,k_node])/10
+                    
+          #           # new
+          #           #u_dirty_1[:,k_node] = cd_1*((np.divide(sum_poses,temp_total) - states_q[:,k_node]))/10 
+          #           #u_dirty_1[:,k_node] = cd_1*(maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
+          #           #norm1b = np.linalg.norm(u_dirty_1[:,k_node])
+          #           #u_dirty_1[:,k_node] = cd_1*(u_dirty_1[:,k_node])/norm1b
+                    
+          #           #u_dirty_1[:,k_node] = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node]) # for sure worx
+          #           #norm1b = np.linalg.norm(u_dirty_1[:,k_node])
+          #           #u_dirty_1[:,k_node] = cd_1*maxu*np.divide(u_dirty_1[:,k_node],norm1b)
+                    
+          #           temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node])
+          #           u_dirty_1[:,k_node] = cd_1*norm_sat(temp_u_coh,maxu)
+                    
+
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_q[:,k_node])
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001))) #- states_q[:,k_node])
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001))) 
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
+            # #u_dirty_2[:,k_node] = cd_2*sigma_1(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)) - states_p[:,k_node])
+            
+            # #u_dirty_2[:,k_node] = cd_2*(np.divide(sum_velos,np.maximum(temp_total,0.001)))/10  # works
+            
+            
+            # norm2 = np.linalg.norm(sum_velos)
+            # if norm2 != 0:
+            #     if temp_total != 0:
+                    
+            #         #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+            
+            #         #new
+            #         #u_dirty_2[:,k_node] = cd_2*(maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node]) # for sure worx
+            #         #norm2b = np.linalg.norm(u_dirty_2[:,k_node])
+            #         #u_dirty_2[:,k_node] = cd_2*(u_dirty_2[:,k_node])/norm2b
+            #         u_dirty_2[:,k_node] = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+            #         norm2b = np.linalg.norm(u_dirty_2[:,k_node])
+            #         u_dirty_2[:,k_node] = cd_2*maxu*np.divide(u_dirty_2[:,k_node],norm2b)
+            
+            
+            #           # SEPARATION
+            # # ----------
+               
+            # #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001))) - states_p[:,k_node])
+            # #u_dirty_3[:,k_node] = -cd_3*(np.divide(sum_obs,np.maximum(temp_total,0.001)))
+            # #u_dirty_3[:,k_node] = -cd_3*sigma_1(np.divide(sum_obs,np.maximum(temp_total,0.001)))
+            # #u_dirty_3[:,k_node] = -cd_3*(np.divide(sum_obs,np.maximum(temp_total,0.001)))
+            # #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001)))- states_p[:,k_node])
+            # #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,np.maximum(temp_total,0.001))))/10
+           
+            # norm3 = np.linalg.norm(sum_obs)
+            
+            # if dist < r_prime:
+            #     if norm3 != 0:
+            #         if temp_total != 0:
+                        
+            #             # velocity to center of mass
+            #             #obs= np.divide(sum_obs,temp_total)
+            #             #v_obs = maxv*np.divide(obs,norm3)
+            #             #u_dirty_3[:,k_node] = cd_3*(v_obs-states_p[:,k_node])/10
+                        
+            #             #u_dirty_3[:,k_node] = -cd_3*((np.divide(sum_obs,temp_total)))/10
+            #             #u_dirty_3[:,k_node] =cd_3*(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) # for sure worx
+            #             #norm3b = np.linalg.norm(u_dirty_3[:,k_node])
+            #             #u_dirty_3[:,k_node] = cd_3*(u_dirty_3[:,k_node])/norm3b
+            #             u_dirty_3[:,k_node] =(maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) 
+            #             norm3b = np.linalg.norm(u_dirty_3[:,k_node])
+            #             u_dirty_3[:,k_node] = -cd_3*maxu*np.divide(u_dirty_3[:,k_node],norm3b)
+                  
+            #             # COHESION
+            # # -------
+            
+            # norm1 = np.linalg.norm(sum_poses)
+            # if norm1 != 0:
+            #     if temp_total != 0:
+                    
+            #         temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm1)-states_p[:,k_node])
+            #         u_dirty_1[:,k_node] = cd_1*norm_sat(temp_u_coh,maxu)
+                    
+
+            # # ALIGNMENT
+            # # --------
+            
+            # norm2 = np.linalg.norm(sum_velos)
+            # if norm2 != 0:
+            #     if temp_total != 0:
+                    
+            #         temp_u_ali = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm2)-states_p[:,k_node])
+            #         u_dirty_2[:,k_node] = cd_2*norm_sat(temp_u_ali,maxu)
+
+ 
+            # # SEPARATION
+            # # ----------
+               
+            # norm3 = np.linalg.norm(sum_obs)
+            
+            # if dist < r_prime:
+            #     if norm3 != 0:
+            #         if temp_total != 0:
+                                               
+            #             temp_u_sep = (maxv*np.divide(((np.divide(sum_obs,temp_total))),norm3)-states_p[:,k_node]) 
+            #             u_dirty_3[:,k_node] = -cd_3*norm_sat(temp_u_sep,maxu)
