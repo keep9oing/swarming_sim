@@ -37,13 +37,18 @@ import lemni_tools
 
 #%% Setup Simulation
 # ------------------
-Ti = 0         # initial time
-Tf = 60         # final time 
-Ts = 0.02      # sample time
-nVeh = 50      # number of vehicles
-iSpread = 300   # initial spread of vehicles
+Ti      = 0         # initial time
+Tf      = 30        # final time 
+Ts      = 0.02      # sample time
+nVeh    = 30         # number of vehicles
+iSpread = 20        # initial spread of vehicles
+escort  = 1         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
-tactic_type = 0     # [0 = dirty_flock, 1 = flock, 2 = circle, 8 = lemniscate]
+tactic_type = 0     
+                # 0 = Reynolds flocking
+                # 1 = Olfati-Saber flocking
+                # 2 = encirclement
+                # 8 = dynamic lemniscate
 
 # Vehicles states
 # ---------------
@@ -68,7 +73,7 @@ cmd[2] = np.random.rand(1,nVeh)-0.5      # command (z)
 targets = 4*(np.random.rand(6,nVeh)-0.5)
 targets[0,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
 targets[1,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[2,:] = 14
+targets[2,:] = 7
 targets[3,:] = 0
 targets[4,:] = 0
 targets[5,:] = 0
@@ -77,7 +82,12 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles
 # ------------------
-nObs = 0    # number of obstacles
+nObs = 0    # number of obstacles 
+
+# if escorting, need to generate an obstacle 
+if nObs == 0 and escort == 1:
+    nObs = 1
+
 obstacles = np.zeros((4,nObs))
 oSpread = iSpread*2
 
@@ -94,10 +104,11 @@ oSpread = iSpread*2
 # obstacles[3,:] = np.random.rand(1,nObs)+0.5                             # radii of obstacle(s)
 
 # manual - make the target an obstacle
-# obstacles[0,0] = targets[0,0]     # position (x)
-# obstacles[1,0] = targets[1,0]     # position (y)
-# obstacles[2,0] = targets[2,0]     # position (z)
-# obstacles[3,0] = 5                # radii of obstacle(s)
+if escort == 1:
+    obstacles[0,0] = targets[0,0]     # position (x)
+    obstacles[1,0] = targets[1,0]     # position (y)
+    obstacles[2,0] = targets[2,0]     # position (z)
+    obstacles[3,0] = 2                # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes
@@ -208,9 +219,10 @@ while round(t,3) < Tf:
     
     # Update the obstacle
     # manual - make the target an obstacle
-    # obstacles[0,:] = targets[0,0]     # position (x)
-    # obstacles[1,:] = targets[1,0]     # position (y)
-    # obstacles[2,:] = targets[2,0]     # position (z)
+    if escort == 1:
+        obstacles[0,:] = targets[0,0]     # position (x)
+        obstacles[1,:] = targets[1,0]     # position (y)
+        obstacles[2,:] = targets[2,0]     # position (z)
 
     # Evolve the states
     # -----------------
@@ -257,9 +269,9 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
-    d = 10                       # lattice scale (distance between a-agents)
+    d = 20                       # lattice scale (distance between a-agents)
     r = 2*d                   # interaction range of a-agents
-    d_prime = 5 #0.6*d          # distance between a- and b-agents
+    d_prime = 10 #0.6*d          # distance between a- and b-agents
     r_prime = 2*d_prime         # interaction range of a- and b-agents
     
     # Add other vehicles as obstacles (optional, default = 0)
@@ -273,7 +285,7 @@ while round(t,3) < Tf:
             
     # Compute the commads (next step)
     # --------------------------------       
-    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid)
+    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
        
         
     

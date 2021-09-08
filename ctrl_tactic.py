@@ -13,7 +13,8 @@ Created on Mon Jan  4 12:45:55 2021
 import numpy as np
 
 #%% Setup hyperparameters
-# ================================
+
+# === Saber Flocking =====
 a = 0.5
 b = 0.5
 c = np.divide(np.abs(a-b),np.sqrt(4*a*b)) 
@@ -21,24 +22,32 @@ eps = 0.1
 #eps = 0.5
 h = 0.9
 pi = 3.141592653589793
+
+# gains
 c1_a = 2                # lattice flocking
 c2_a = 2*np.sqrt(2)
 c1_b = 1                # obstacle avoidance
 c2_b = 2*np.sqrt(1)
 c1_g = 3                # target tracking
 c2_g = 2*np.sqrt(3)
+
+# === Encirclement+ ===
 c1_d = 2                # encirclement 
 c2_d = 2*np.sqrt(2)
 
-cd_1 = 0.8    # cohesion
-cd_2 = 0.3    # alignment
-cd_3 = 0.9    # separation
-cd_4 = 0   # navigation (default 0)
-maxu = 20   # max input (per rule)
-maxv = 100  # max v
-far_away = 300 # when to go back to centroid
+# === Reynolds Flocking ===
+cd_1 = 0.4              # cohesion
+cd_2 = 0.3              # alignment
+cd_3 = 0.8              # separation
+cd_4 = 0                # navigation (default 0)
+maxu = 10               # max input (per rule)
+maxv = 100              # max v
+far_away = 500          # when to go back to centroid
+agents_min_coh = 3      # min number of agents
+mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
 
-# Some function that are used often
+
+#%% Some function that are used often
 # ---------------------------------
 
 def regnorm(z):
@@ -96,10 +105,9 @@ def norm_sat(u,maxu):
 
 
     
-# Tactic Command Equations 
+#%% Tactic Command Equations 
 # ------------------------
-def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid):   
-    
+def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, escort):   
     
     # initialize 
     r_a = sigma_norm(r)                         # lattice separation (sensor range)
@@ -113,18 +121,21 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
     #u_enc2 = np.zeros((3,states_q.shape[1]))    # ensherement
     cmd_i = np.zeros((3,states_q.shape[1]))     # store the commands
     
-    u_dirty_1 = np.zeros((3,states_q.shape[1]))  # cohesion
-    u_dirty_2 = np.zeros((3,states_q.shape[1]))  # alignment
-    u_dirty_3 = np.zeros((3,states_q.shape[1]))  # separation
+    u_coh = np.zeros((3,states_q.shape[1]))  # cohesion
+    u_ali = np.zeros((3,states_q.shape[1]))  # alignment
+    u_sep = np.zeros((3,states_q.shape[1]))  # separation
     distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
-    # to find the radius that includes min number of agents
-    slide = 0
-    for k_node in range(states_q.shape[1]):
-        #slide += 1
-        for k_neigh in range(slide,states_q.shape[1]):
-            if k_node != k_neigh:
-                distances[k_node,k_neigh] = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
     
+    
+    # to find the radius that includes min number of agents
+    if mode_min_coh == 1:
+        slide = 0
+        for k_node in range(states_q.shape[1]):
+            #slide += 1
+            for k_neigh in range(slide,states_q.shape[1]):
+                if k_node != k_neigh:
+                    distances[k_node,k_neigh] = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
+        
     # # initialize 
     # r_b = sigma_norm(r_prime)                   # obstacle separation (sensor range)
     # d_b = sigma_norm(d_prime)                   # obstacle separation (goal range)
@@ -153,13 +164,16 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             u_sep = np.zeros((3,states_q.shape[1]))  # separation
             
             # adjust cohesion range for min number of agents 
-            r_coh = 0
-            agents_min_coh = 5
-            node_ranges = distances[k_node,:]
-            node_ranges_sorted = np.sort(node_ranges)
-            r_coh_temp = node_ranges_sorted[agents_min_coh+1]
-            r_coh = r_coh_temp
-            #print(r_coh)
+            if mode_min_coh == 1:
+                r_coh = 0
+                #agents_min_coh = 5
+                node_ranges = distances[k_node,:]
+                node_ranges_sorted = np.sort(node_ranges)
+                r_coh_temp = node_ranges_sorted[agents_min_coh+1]
+                r_coh = r_coh_temp
+                #print(r_coh)
+            else:
+                r_coh = r
 
    
             # search through each neighbour
@@ -184,7 +198,7 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                         sum_velos += states_p[:,k_neigh]
 
                     # if within cohesion range 
-                    if dist < np.maximum(r_coh,r):
+                    if dist < np.maximum(r,r_coh):
                         
                         #count
                         temp_total_coh += 1
@@ -240,7 +254,11 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             else:
                 cd_4 = 0
 
-            temp_u_nav = (centroid.transpose()-states_q[:,k_node])
+            if escort == 1:
+                cd_4 = 1
+                temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
+            else:
+                temp_u_nav = (centroid.transpose()-states_q[:,k_node])
             u_nav[:,k_node] = cd_4*norm_sat(temp_u_nav,maxu)
             
 
@@ -340,6 +358,10 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
     cmd = cmd_i    
     
     return cmd
+
+
+
+
 
 
 #%% LEGACY 
