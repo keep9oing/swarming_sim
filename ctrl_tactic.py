@@ -43,8 +43,9 @@ cd_4 = 0                # navigation (default 0)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
-agents_min_coh = 3      # min number of agents
+agents_min_coh = 1      # min number of agents
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
+cd_escort = 0.5         # gain to use for escort
 
 
 #%% Some function that are used often
@@ -255,7 +256,7 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                 cd_4 = 0
 
             if escort == 1:
-                cd_4 = 1
+                cd_4 = cd_escort
                 temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
             else:
                 temp_u_nav = (centroid.transpose()-states_q[:,k_node])

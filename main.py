@@ -38,10 +38,10 @@ import lemni_tools
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 30        # final time 
+Tf      = 60        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 30         # number of vehicles
-iSpread = 20        # initial spread of vehicles
+nVeh    = 12         # number of vehicles
+iSpread = 100        # initial spread of vehicles
 escort  = 1         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
 tactic_type = 0     
@@ -212,7 +212,7 @@ while round(t,3) < Tf:
     
     # Evolve the target
     # -----------------
-    tSpeed = 3
+    tSpeed = 10
     targets[0,:] = targets[0,:] + tSpeed*0.002
     targets[1,:] = targets[1,:] + tSpeed*0.005
     targets[2,:] = targets[2,:] + tSpeed*0.0005
@@ -269,7 +269,7 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
-    d = 20                       # lattice scale (distance between a-agents)
+    d = 0                       # lattice scale (distance between a-agents)
     r = 2*d                   # interaction range of a-agents
     d_prime = 10 #0.6*d          # distance between a- and b-agents
     r_prime = 2*d_prime         # interaction range of a- and b-agents
