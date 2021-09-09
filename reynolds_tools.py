@@ -9,6 +9,8 @@ Created on Thu Sep  9 19:12:59 2021
 NOTE: right now I'm passing full cmd_i for all nodes, only need to pass for this node
 that should speed things up a bit 
 
+same deal with intermediary terms 
+
 
 """
 
@@ -26,7 +28,7 @@ cd_4 = 0                # navigation (default 0)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
-agents_min_coh = 5      # min number of agents
+agents_min_coh = 0      # min number of agents
 mode_min_coh = 0        # enforce min # of agents (0 = no, 1 = yes)
 cd_escort = 0.5         # gain to use for escort
 
@@ -36,8 +38,21 @@ def norm_sat(u,maxu):
     u_out = maxu*np.divide(u,norm1b)
     return u_out
 
+def order(states_q):
+    distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
+    
+    # to find the radius that includes min number of agents
+    if mode_min_coh == 1:
+        slide = 0
+        for k_node in range(states_q.shape[1]):
+            #slide += 1
+            for k_neigh in range(slide,states_q.shape[1]):
+                if k_node != k_neigh:
+                    distances[k_node,k_neigh] = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
+    return distances 
 
-def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort):
+
+def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances):
 
     # Reynolds Flocking
     # ------------------ 
@@ -47,7 +62,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     u_ali = np.zeros((3,states_q.shape[1]))  # alignment
     u_sep = np.zeros((3,states_q.shape[1]))  # separation
     u_nav = np.zeros((3,states_q.shape[1]))     # navigation
-    distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
+    #distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
     cmd_i = np.zeros((3,states_q.shape[1])) 
     
     #initialize for this node

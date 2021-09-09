@@ -38,14 +38,14 @@ import lemni_tools
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 60        # final time 
+Tf      = 30        # final time 
 Ts      = 0.02      # sample time
 nVeh    = 12         # number of vehicles
-iSpread = 100        # initial spread of vehicles
+iSpread = 10        # initial spread of vehicles
 escort  = 1         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
 tactic_type = 0     
-                # 0 = Reynolds flocking
+                # 0 = Reynolds flocking + Olfati-Saber obstacle
                 # 1 = Olfati-Saber flocking
                 # 2 = encirclement
                 # 8 = dynamic lemniscate
@@ -73,7 +73,7 @@ cmd[2] = np.random.rand(1,nVeh)-0.5      # command (z)
 targets = 4*(np.random.rand(6,nVeh)-0.5)
 targets[0,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
 targets[1,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[2,:] = 7
+targets[2,:] = 50
 targets[3,:] = 0
 targets[4,:] = 0
 targets[5,:] = 0
@@ -271,7 +271,7 @@ while round(t,3) < Tf:
     states_p = state[3:6,:]     # velocities 
     d = 5                       # lattice scale (distance between a-agents)
     r = 2*d                   # interaction range of a-agents
-    d_prime = 10 #0.6*d          # distance between a- and b-agents
+    d_prime = 2 #0.6*d          # distance between a- and b-agents
     r_prime = 2*d_prime         # interaction range of a- and b-agents
     
     # Add other vehicles as obstacles (optional, default = 0)
