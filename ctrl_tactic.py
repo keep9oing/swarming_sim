@@ -11,6 +11,7 @@ Created on Mon Jan  4 12:45:55 2021
 """
 
 import numpy as np
+import reynolds_tools 
 
 #%% Setup hyperparameters
 
@@ -43,8 +44,8 @@ cd_4 = 0                # navigation (default 0)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
-agents_min_coh = 1      # min number of agents
-mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
+agents_min_coh = 5      # min number of agents
+mode_min_coh = 0        # enforce min # of agents (0 = no, 1 = yes)
 cd_escort = 0.5         # gain to use for escort
 
 
@@ -355,6 +356,10 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             cmd_i[:,k_node] = u_coh[:,k_node] + u_ali[:,k_node] + u_sep[:,k_node] + u_nav[:,k_node] 
         else:
             cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node] 
+
+        #cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort)
+        #print('test')
+
 
     cmd = cmd_i    
     

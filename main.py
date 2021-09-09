@@ -108,7 +108,7 @@ if escort == 1:
     obstacles[0,0] = targets[0,0]     # position (x)
     obstacles[1,0] = targets[1,0]     # position (y)
     obstacles[2,0] = targets[2,0]     # position (z)
-    obstacles[3,0] = 2                # radii of obstacle(s)
+    obstacles[3,0] = 1                # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes
@@ -269,7 +269,7 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
-    d = 0                       # lattice scale (distance between a-agents)
+    d = 5                       # lattice scale (distance between a-agents)
     r = 2*d                   # interaction range of a-agents
     d_prime = 10 #0.6*d          # distance between a- and b-agents
     r_prime = 2*d_prime         # interaction range of a- and b-agents
