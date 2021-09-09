@@ -5,7 +5,12 @@ Created on Thu Sep  9 19:12:59 2021
 
 @author: tjards
 
-This program implements Reynolds Rules of Flocking 
+
+NOTE: right now I'm passing full cmd_i for all nodes, only need to pass for this node
+that should speed things up a bit 
+
+same deal with intermediary terms 
+
 
 """
 
