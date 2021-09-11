@@ -3,11 +3,25 @@
 """
 Created on Mon Dec 28 20:29:59 2020
 
-This file defines some useful planar constraints
+This file defines some useful functions 
 
 @author: tjards
 """
 import numpy as np 
+
+eps = 0.5
+
+def centroid(points):
+    length = points.shape[0]
+    sum_x = np.sum(points[:, 0])
+    sum_y = np.sum(points[:, 1])
+    sum_z = np.sum(points[:, 2])
+    centroid = np.array((sum_x/length, sum_y/length, sum_z/length), ndmin = 2)
+    return centroid.transpose() 
+
+def sigma_norm(z):    
+    norm_sig = (1/eps)*(np.sqrt(1+eps*np.linalg.norm(z)**2)-1)
+    return norm_sig
 
 def buildWall(wType, pos): 
     

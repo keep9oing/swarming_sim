@@ -17,13 +17,15 @@ import numpy as np
 cd_1 = 0.4              # cohesion
 cd_2 = 0.3              # alignment
 cd_3 = 0.8              # separation
-cd_4 = 0                # navigation (default 0)
+cd_track = 0            # nominally, zero
+
+#cd_4 = 0                # navigation (Note: will get modified below)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
 agents_min_coh = 5      # min number of agents
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
-cd_escort = 0.5         # gain to use for escort
+
 
 # Some useful functions
 # ---------------------
@@ -161,14 +163,14 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     # if far away, adjust gain to drive back
     if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
         cd_4 = 0.05
-        print('agent ', k_node,' strayed to far, navigation reset')
+        print('agent ', k_node,' strayed too far, navigation reset')
     # ... or just pass through selected value
     else:
-        cd_4 = 0
+        cd_4 = cd_track
     
     # if escorting, adjust gain for escorting and track target
     if escort == 1:
-        cd_4 = cd_escort
+        cd_4 = cd_track
         temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
     # ... or track centroid
     else:

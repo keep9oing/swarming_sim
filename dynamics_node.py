@@ -24,8 +24,8 @@ def clamp_norm_min(v, n_min):
 def evolve_sat(Ts, state, cmd):
     
     # constraints
-    vmax = 1000
-    vmin = -1000
+    vmax = 100
+    vmin = 10
 
     #discretized doubple integrator 
     state[0:3,:] = state[0:3,:] + state[3:6,:]*Ts

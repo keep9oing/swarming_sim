@@ -29,7 +29,7 @@ import encirclement_tools as encircle_tools
 import ctrl_tactic as tactic 
 import pickle 
 import quaternions as quat
-#import random 
+import random 
 import lemni_tools 
 
 #%% Setup Simulation
@@ -41,7 +41,7 @@ nVeh    = 10         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
-tactic_type = 'reynolds'     
+tactic_type = 'saber'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -187,6 +187,39 @@ lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
 twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
 
+# parameters for dynamic encirclement and lemniscate
+# --------------------------------------------------
+# r_desired = 5                                   # desired radius of encirclement [m]
+# ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+# phi_dot_d = 0.12                                # how fast to encircle
+# unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+# lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
+# quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+# quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
+
+# enforce stuff
+# ------------
+
+# # define vector perpendicular to encirclement plane
+# if ref_plane == 'horizontal':
+#     twist_perp = np.array([0,0,1]).reshape((3,1))
+# elif tactic_type == 'lemni':
+#     print('Warning: Set ref_plane to horizontal for lemniscate')
+
+# # enforce the orientation for lemniscate (later, expand this for the general case)
+# lemni_good = 0
+# if tactic_type == 'lemni':
+#     if quat_0[0] == 1:
+#         if quat_0[1] == 0:
+#             if quat_0[2] == 0:
+#                 if quat_0[3] == 0:
+#                     lemni_good = 1
+# if tactic_type == 'lemni' and lemni_good == 0:
+#     print ('Warning: Set quat_0 to zeros for lemni to work')
+#     # travis note for later: you can do this rotation after the fact for the general case
+
+#twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
+
 #%% start the simulation
 # --------------------
 
@@ -213,8 +246,7 @@ while round(t,3) < Tf:
 
     # Evolve the states
     # -----------------
-    #state = node.evolve(Ts, state, cmd)
-    state = node.evolve_sat(Ts, state, cmd)
+    state = node.evolve(Ts, state, cmd)
     
     # Store results
     # -------------
@@ -257,6 +289,10 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
+    # d = 5                       # lattice scale (distance between a-agents)
+    # r = 2*d                   # interaction range of a-agents
+    # d_prime = 2 #0.6*d          # distance between a- and b-agents
+    # r_prime = 2*d_prime         # interaction range of a- and b-agents
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------
@@ -271,6 +307,8 @@ while round(t,3) < Tf:
     # --------------------------------       
     cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
        
+        
+    
 #%% Produce animation of simulation
 # ---------------------------------
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
