@@ -21,7 +21,7 @@ cd_4 = 0                # navigation (default 0)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
-agents_min_coh = 3      # min number of agents
+agents_min_coh = 5      # min number of agents
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
 cd_escort = 0.5         # gain to use for escort
 
@@ -61,7 +61,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     u_nav = np.zeros((3,states_q.shape[1]))     # navigation
     #distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
     cmd_i = np.zeros((3,states_q.shape[1])) 
-    
+       
     #initialize for this node
     temp_total = 0
     temp_total_prime = 0
@@ -69,9 +69,6 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     sum_poses = np.zeros((3))
     sum_velos = np.zeros((3))
     sum_obs = np.zeros((3))
-    u_coh = np.zeros((3,states_q.shape[1]))  # cohesion
-    u_ali = np.zeros((3,states_q.shape[1]))  # alignment
-    u_sep = np.zeros((3,states_q.shape[1]))  # separation
     
     # adjust cohesion range for min number of agents 
     if mode_min_coh == 1:
@@ -161,19 +158,26 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
                 
     # Tracking
     # --------            
-    # if far away
+    # if far away, adjust gain to drive back
     if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
         cd_4 = 0.05
+        print('agent ', k_node,' strayed to far, navigation reset')
+    # ... or just pass through selected value
     else:
         cd_4 = 0
     
+    # if escorting, adjust gain for escorting and track target
     if escort == 1:
         cd_4 = cd_escort
         temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
+    # ... or track centroid
     else:
         temp_u_nav = (centroid.transpose()-states_q[:,k_node])
+    
+    # compute tracking 
     u_nav[:,k_node] = cd_4*norm_sat(temp_u_nav,maxu)
     
+    # compute consolidated commands
     cmd_i[:,k_node] = u_coh[:,k_node] + u_ali[:,k_node] + u_sep[:,k_node] + u_nav[:,k_node] 
     
     return cmd_i[:,k_node]

@@ -13,6 +13,19 @@ import quaternions as quat
 
 # delta_phi_desired = 2Pi/N
 
+#%% Hyper parameters
+# -----------------
+c1_d = 2                # encirclement 
+c2_d = 2*np.sqrt(2)
+
+
+#%% Useful functions
+# -------------------
+
+def sigma_1(z):    
+    sigma_1 = np.divide(z,np.sqrt(1+z**2))    
+    return sigma_1
+
 def polar2cart(r, theta):
     #note: accepts and return radians
     x = r*np.cos(theta)
@@ -63,6 +76,14 @@ def centroid(points):
 
 #%% Encirclement calculations
 # ---------------------------
+
+def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
+    
+    u_enc = np.zeros((3,states_q.shape[1]))     
+    u_enc[:,k_node] = - c1_d*sigma_1(states_q[:,k_node]-targets_enc[:,k_node])-c2_d*(states_p[:,k_node] - targets_v_enc[:,k_node])    
+    
+    return u_enc[:,k_node]
+    
     
 def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
         

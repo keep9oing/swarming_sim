@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This project implements an autonomous, decentralized dynamic encirclement strategy for swarms of vehicles. 
-The strategy requires no human invervention once the target is selected and all vehicles rely on local knowledge only. 
-Each vehicle makes its own decisions about where to go based on its relative position to other vehicles, 
-but the protocol results in a globally stable, evenly-spaced swarm. 
-
-Adapted from the approach in:
+This project implements an autonomous, decentralized swarming strategies including:
     
-    Ahmed T. Hafez; Anthony J. Marasco; Sidney N. Givigi; Mohamad Iskandarani; Shahram Yousefi; 
-    and Camille Alain Rabbath, "Solving Multi-UAV Dynamic Encirclement via Model Predictive Control", 
-    IEEE Transactions on Control Systems Technology, Vol. 23 (6), Nov 2015
+    - Reynolds rules of flocking ("boids")
+    - Olfati-Saber flocking
+    - Dynamic Encirclement 
+    - Leminiscatic Arching 
 
-but reformulated to be compatible with the Reynolds Rules canon
+The strategies requires no human invervention once the target is selected and all agents rely on local knowledge only. 
+Each vehicle makes its own decisions about where to go based on its relative position to other vehicles
 
 Created on Tue Dec 22 11:48:18 2020
 
@@ -40,9 +37,9 @@ import lemni_tools
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 5         # number of vehicles
-iSpread = 10        # initial spread of vehicles
-escort  = 1         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
+nVeh    = 7         # number of vehicles
+iSpread = 100       # initial spread of vehicles
+escort  = 0         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
 tactic_type = 0     
                 # 0 = Reynolds flocking + Olfati-Saber obstacle
@@ -73,7 +70,7 @@ cmd[2] = np.random.rand(1,nVeh)-0.5      # command (z)
 targets = 4*(np.random.rand(6,nVeh)-0.5)
 targets[0,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
 targets[1,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[2,:] = 50
+targets[2,:] = 15
 targets[3,:] = 0
 targets[4,:] = 0
 targets[5,:] = 0
@@ -212,7 +209,7 @@ while round(t,3) < Tf:
     
     # Evolve the target
     # -----------------
-    tSpeed = 10
+    tSpeed = 0
     targets[0,:] = targets[0,:] + tSpeed*0.002
     targets[1,:] = targets[1,:] + tSpeed*0.005
     targets[2,:] = targets[2,:] + tSpeed*0.0005
