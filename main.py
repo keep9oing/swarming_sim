@@ -40,7 +40,7 @@ import lemni_tools
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 12         # number of vehicles
+nVeh    = 5         # number of vehicles
 iSpread = 10        # initial spread of vehicles
 escort  = 1         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
@@ -108,7 +108,7 @@ if escort == 1:
     obstacles[0,0] = targets[0,0]     # position (x)
     obstacles[1,0] = targets[1,0]     # position (y)
     obstacles[2,0] = targets[2,0]     # position (z)
-    obstacles[3,0] = 1                # radii of obstacle(s)
+    obstacles[3,0] = 1               # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes

@@ -122,8 +122,9 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         # ------------------
         if tactic_type == 0:
            # compute command 
-           cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances)
-            
+           #cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances)
+           cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets[:,k_node].reshape((3,1)), centroid, states_q[:,k_node].reshape((3,1)), states_p[:,k_node].reshape((3,1)), 0, r, r_prime, escort, distances)
+ 
 
         # Saber Flocking
         # ---------------                                

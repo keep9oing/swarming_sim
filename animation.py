@@ -147,7 +147,8 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
     # ---------------------------------
     if showObs >= 1:
         for j in range (0, nObs):    
-            line_obstacle = ax.plot([], [], [], 'ro', ms = 10*r_o[0,j] )
+            #line_obstacle = ax.plot([], [], [], 'ro', ms = 10*r_o[0,j] )
+            line_obstacle = ax.plot([], [], [], 'ro', ms = 10*r_o[0,j], markerfacecolor=(1,1,0,0.5) )
             lines_obstacles.extend(line_obstacle)
     
     # update the lines

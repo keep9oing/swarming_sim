@@ -5,17 +5,15 @@ Created on Thu Sep  9 19:12:59 2021
 
 @author: tjards
 
-This program implements Reynolds Rules of Flocking 
+This program implements Reynolds Rules of Flocking ("boids")
 
 """
 
-
 import numpy as np
 
-
-
-# hyper parameters
+# Hyperparameters
 # ----------------
+
 cd_1 = 0.4              # cohesion
 cd_2 = 0.3              # alignment
 cd_3 = 0.8              # separation
@@ -23,10 +21,12 @@ cd_4 = 0                # navigation (default 0)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
 far_away = 500          # when to go back to centroid
-agents_min_coh = 0      # min number of agents
-mode_min_coh = 0        # enforce min # of agents (0 = no, 1 = yes)
+agents_min_coh = 3      # min number of agents
+mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
 cd_escort = 0.5         # gain to use for escort
 
+# Some useful functions
+# ---------------------
 
 def norm_sat(u,maxu):
     norm1b = np.linalg.norm(u)
@@ -46,6 +46,8 @@ def order(states_q):
                     distances[k_node,k_neigh] = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
     return distances 
 
+# Compute commands
+# ----------------
 
 def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances):
 
@@ -73,6 +75,11 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     
     # adjust cohesion range for min number of agents 
     if mode_min_coh == 1:
+        
+        # make sure the number of vehicles is bigger than the min number of agents 
+        if distances.shape[0] < agents_min_coh+2:
+            raise Exception('There are an insufficient number of agents for the cohesion mode selected. Minimum number of agents for mode ',agents_min_coh ,' is ', agents_min_coh+2, ' and you have selected ', distances.shape[0] )
+    
         r_coh = 0
         #agents_min_coh = 5
         node_ranges = distances[k_node,:]
@@ -82,8 +89,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
         #print(r_coh)
     else:
         r_coh = r
-    
-       
+          
     # search through each neighbour
     for k_neigh in range(states_q.shape[1]):
         # except for itself (duh):
@@ -154,8 +160,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
         u_sep[:,k_node] = -cd_3*norm_sat(temp_u_sep,maxu)
                 
     # Tracking
-    # --------           
-    
+    # --------            
     # if far away
     if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
         cd_4 = 0.05
