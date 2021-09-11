@@ -64,22 +64,18 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         u_obs[:,k_node] = saber_tools.compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime)
 
 
-        # if structured swarming
-        if tactic_type == 'circle':    
-            # Encirclement term (phi_delta)
-            # ----------------------------    
+        # Encirclement term (phi_delta)
+        # ---------------------------- 
+        if tactic_type == 'circle':       
             u_enc[:,k_node] = encircle_tools.compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node)
             
-        
-        # if structured swarming
+        # Lemniscatic term (phi_lima)
+        # ---------------------------- 
         if tactic_type == 'lemni':    
-            # Encirclement term (phi_delta)
-            # ----------------------------    
             u_enc[:,k_node] = lemni_tools.compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node)
-  
-
-        # Conditional commands
-        # ----------------------------------------------         
+          
+        # Mixer
+        # -----         
         if tactic_type == 'saber':
             cmd_i[:,k_node] = u_int[:,k_node] + u_obs[:,k_node] + u_nav[:,k_node] 
         elif tactic_type == 'reynolds':

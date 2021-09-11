@@ -17,14 +17,15 @@ import numpy as np
 cd_1 = 0.4              # cohesion
 cd_2 = 0.3              # alignment
 cd_3 = 0.8              # separation
-cd_track = 0            # nominally, zero
-
-#cd_4 = 0                # navigation (Note: will get modified below)
+cd_track = 0.5          # nominally, zero
+#cd_4 = 0               # navigation (Note: will get modified below, depending on case)
 maxu = 10               # max input (per rule)
 maxv = 100              # max v
-far_away = 500          # when to go back to centroid
-agents_min_coh = 5      # min number of agents
+recovery = 1            # recover if far away (0 = no, 1 = yes)
+far_away = 300          # when to go back to centroid
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
+agents_min_coh = 5      # min number of agents
+
 
 
 # Some useful functions
@@ -159,20 +160,26 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
         u_sep[:,k_node] = -cd_3*norm_sat(temp_u_sep,maxu)
                 
     # Tracking
-    # --------            
-    # if far away, adjust gain to drive back
-    if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
-        cd_4 = 0.05
-        print('agent ', k_node,' strayed too far, navigation reset')
-    # ... or just pass through selected value
-    else:
-        cd_4 = cd_track
-    
-    # if escorting, adjust gain for escorting and track target
+    # -------- 
+    cd_4 = cd_track
+           
+    # if doing recovery
+    if recovery == 1:
+        # and if far away, adjust gain to drive back
+        if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
+            cd_4 = 0.5 # overides set value, so recovery is always a low gain
+            print('agent ', k_node,' strayed too far, navigation reset')
+    # # ... or just pass through selected value
+    # else:
+    #     cd_4 = cd_track
+        
+    # if escorting, track the target
     if escort == 1:
         cd_4 = cd_track
+        if cd_4 == 0:
+            print('WARNING: no gain set for tracking target, please set a gain > 0')
         temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
-    # ... or track centroid
+    # else, load up the centroid for the recovery case
     else:
         temp_u_nav = (centroid.transpose()-states_q[:,k_node])
     

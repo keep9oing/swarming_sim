@@ -32,15 +32,16 @@ import quaternions as quat
 #import random 
 import lemni_tools 
 
+import swarm_metrics 
+
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 10         # number of vehicles
-iSpread = 10       # initial spread of vehicles
-escort  = 0         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
-
+nVeh    = 7        # number of vehicles
+iSpread = 100       # initial spread of vehicles
+escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'reynolds'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
@@ -64,8 +65,7 @@ d = 5                       # lattice scale (Saber flocking, distance between a-
 r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
 d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
 r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
-vehObs = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
-
+vehObs = 0                  # include other vehicles as obstacles [0 = no, 1 = yes] 
 
 # Vehicles states
 # ---------------
@@ -125,7 +125,7 @@ if escort == 1:
     obstacles[0,0] = targets[0,0]     # position (x)
     obstacles[1,0] = targets[1,0]     # position (y)
     obstacles[2,0] = targets[2,0]     # position (z)
-    obstacles[3,0] = 1               # radii of obstacle(s)
+    obstacles[3,0] = 5              # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes
@@ -175,6 +175,10 @@ centroid_all   = np.zeros([nSteps, len(centroid), 1])
 f_all          = np.ones(nSteps)
 lemni_all      = np.zeros([nSteps, nVeh])
 
+# initial metrics
+metrics_order_all = np.zeros(nSteps)
+metrics_order = 0
+
 t_all[0]                = Ti
 states_all[0,:,:]       = state
 cmds_all[0,:,:]         = cmd
@@ -182,6 +186,8 @@ targets_all[0,:,:]      = targets
 obstacles_all[0,:,:]    = obstacles
 centroid_all[0,:,:]     = centroid
 f_all[0]                = f
+metrics_order_all[0]    = metrics_order
+
 
 lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
@@ -226,6 +232,7 @@ while round(t,3) < Tf:
     centroid_all[i,:,:]     = centroid
     f_all[i]                = f
     lemni_all[i,:]          = lemni
+    metrics_order_all[i]    = metrics_order
     
     # Increment 
     # ---------
@@ -257,6 +264,10 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
+    
+    # Compute metrics
+    # ---------------
+    metrics_order = swarm_metrics.order(states_p)
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------
