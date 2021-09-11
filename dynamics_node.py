@@ -21,11 +21,11 @@ def clamp_norm_min(v, n_min):
     return [f * vx, f * vy, f * vz]
 
 
-def evolve(Ts, state, cmd):
+def evolve_sat(Ts, state, cmd):
     
     # constraints
-    vmax = 100
-    vmin = 10
+    vmax = 1000
+    vmin = -1000
 
     #discretized doubple integrator 
     state[0:3,:] = state[0:3,:] + state[3:6,:]*Ts
@@ -37,7 +37,21 @@ def evolve(Ts, state, cmd):
     
     return state
 
+def evolve(Ts, state, cmd):
+    
+    # constraints
+    vmax = 1000
+    vmin = -1000
 
+    #discretized doubple integrator 
+    state[0:3,:] = state[0:3,:] + state[3:6,:]*Ts
+    state[3:6,:] = state[3:6,:] + cmd[:,:]*Ts
+    #state[3:6,:] = np.minimum(np.maximum(state[3:6,:] + cmd[:,:]*Ts, -vmax), vmax)
+    #state[3:6,:] = np.minimum(np.maximum(state[3:6,:] + cmd[:,:]*Ts, vmin), vmax)
+    #state[3:6,:] = clamp_norm(state[3:6,:] + cmd[:,:]*Ts,vmax)
+    #state[3:6,:] = clamp_norm_min(clamp_norm(state[3:6,:] + cmd[:,:]*Ts,vmax),vmin)
+    
+    return state
 
 
 

@@ -37,15 +37,35 @@ import lemni_tools
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 7         # number of vehicles
-iSpread = 100       # initial spread of vehicles
+nVeh    = 10         # number of vehicles
+iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort duty? (0 = no, 1 = yes, overides some of the other setting )
 
-tactic_type = 0     
-                # 0 = Reynolds flocking + Olfati-Saber obstacle
-                # 1 = Olfati-Saber flocking
-                # 2 = encirclement
-                # 8 = dynamic lemniscate
+tactic_type = 'saber'     
+                # reynolds = Reynolds flocking + Olfati-Saber obstacle
+                # saber = Olfati-Saber flocking
+                # circle = encirclement
+                # lemni = dynamic lemniscate
+
+# speed of target
+tSpeed = 1
+
+# parameters for dynamic encirclement and lemniscate
+r_desired = 5                                   # desired radius of encirclement [m]
+ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+phi_dot_d = 0.12                                # how fast to encircle
+unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
+quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
+
+# range parameters 
+d = 5                       # lattice scale (Saber flocking, distance between a-agents)
+r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
+d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
+vehObs = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
+
 
 # Vehicles states
 # ---------------
@@ -77,16 +97,15 @@ targets[5,:] = 0
 targets_encircle = targets.copy()
 error = state[0:3,:] - targets[0:3,:]
 
-#%% Define obstacles
-# ------------------
+#%% Define obstacles (kind of a manual process right now)
+# ------------------------------------------------------
 nObs = 0    # number of obstacles 
-
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*2
+oSpread = iSpread*1
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -95,10 +114,11 @@ oSpread = iSpread*2
 # obstacles[3,:] = 0
 
 #random (comment this out if manual)
-# obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
-# obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-# obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
-# obstacles[3,:] = np.random.rand(1,nObs)+0.5                             # radii of obstacle(s)
+if nObs != 0:
+    obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
+    obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
+    obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
+    obstacles[3,:] = np.random.rand(1,nObs)+0.5                             # radii of obstacle(s)
 
 # manual - make the target an obstacle
 if escort == 1:
@@ -165,37 +185,40 @@ f_all[0]                = f
 
 lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
+twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
 
 # parameters for dynamic encirclement and lemniscate
 # --------------------------------------------------
-r_desired = 5                                   # desired radius of encirclement [m]
-ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
-phi_dot_d = 0.12                                # how fast to encircle
-unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
-lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
-quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
-quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
+# r_desired = 5                                   # desired radius of encirclement [m]
+# ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+# phi_dot_d = 0.12                                # how fast to encircle
+# unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+# lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
+# quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+# quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
 
 # enforce stuff
 # ------------
 
-# define vector perpendicular to encirclement plane
-if ref_plane == 'horizontal':
-    twist_perp = np.array([0,0,1]).reshape((3,1))
-elif tactic_type == 8:
-    print('Warning: Set ref_plane to horizontal for lemniscate')
+# # define vector perpendicular to encirclement plane
+# if ref_plane == 'horizontal':
+#     twist_perp = np.array([0,0,1]).reshape((3,1))
+# elif tactic_type == 'lemni':
+#     print('Warning: Set ref_plane to horizontal for lemniscate')
 
-# enforce the orientation for lemniscate (later, expand this for the general case)
-lemni_good = 0
-if tactic_type == 8:
-    if quat_0[0] == 1:
-        if quat_0[1] == 0:
-            if quat_0[2] == 0:
-                if quat_0[3] == 0:
-                    lemni_good = 1
-if tactic_type == 8 and lemni_good == 0:
-    print ('Warning: Set quat_0 to zeros for lemni to work')
-    # travis note for later: you can do this rotation after the fact for the general case
+# # enforce the orientation for lemniscate (later, expand this for the general case)
+# lemni_good = 0
+# if tactic_type == 'lemni':
+#     if quat_0[0] == 1:
+#         if quat_0[1] == 0:
+#             if quat_0[2] == 0:
+#                 if quat_0[3] == 0:
+#                     lemni_good = 1
+# if tactic_type == 'lemni' and lemni_good == 0:
+#     print ('Warning: Set quat_0 to zeros for lemni to work')
+#     # travis note for later: you can do this rotation after the fact for the general case
+
+#twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
 
 #%% start the simulation
 # --------------------
@@ -204,12 +227,12 @@ while round(t,3) < Tf:
   
 
     # if mobbing, offset targets back down
-    if tactic_type == 8 and lemni_type == 2:
+    if tactic_type == 'lemni' and lemni_type == 2:
         targets[2,:] -= r_desired
     
     # Evolve the target
     # -----------------
-    tSpeed = 0
+    #tSpeed = 0
     targets[0,:] = targets[0,:] + tSpeed*0.002
     targets[1,:] = targets[1,:] + tSpeed*0.005
     targets[2,:] = targets[2,:] + tSpeed*0.0005
@@ -249,16 +272,16 @@ while round(t,3) < Tf:
     swarm_prox = tactic.sigma_norm(centroid.ravel()-targets[0:3,0])
      
     #if flocking
-    if tactic_type < 2 :
+    if tactic_type == 'reynolds' or tactic_type == 'saber' :
         trajectory = targets 
     
     # if encircling
-    if tactic_type == 2: 
+    if tactic_type == 'circle': 
         # compute trajectory
         trajectory, _ = encircle_tools.encircle_target(targets, state, r_desired, phi_dot_d, ref_plane, quat_0)
     
     # if lemniscating
-    elif tactic_type == 8:
+    elif tactic_type == 'lemni':
         # compute trajectory
         trajectory, lemni = lemni_tools.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
                 
@@ -266,14 +289,14 @@ while round(t,3) < Tf:
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
-    d = 5                       # lattice scale (distance between a-agents)
-    r = 2*d                   # interaction range of a-agents
-    d_prime = 2 #0.6*d          # distance between a- and b-agents
-    r_prime = 2*d_prime         # interaction range of a- and b-agents
+    # d = 5                       # lattice scale (distance between a-agents)
+    # r = 2*d                   # interaction range of a-agents
+    # d_prime = 2 #0.6*d          # distance between a- and b-agents
+    # r_prime = 2*d_prime         # interaction range of a- and b-agents
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------
-    vehObs = 0     # include other vehicles as obstacles [0 = no, 1 = yes]  
+    #vehObs = 0     # include other vehicles as obstacles [0 = no, 1 = yes]  
     if vehObs == 0: 
         obstacles_plus = obstacles
     elif vehObs == 1:

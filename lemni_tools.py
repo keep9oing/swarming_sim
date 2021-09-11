@@ -17,7 +17,33 @@ import encirclement_tools as encircle_tools
 # -----------
 eps = 0.1
 
+c1_d = 2                # encirclement 
+c2_d = 2*np.sqrt(2)
+
 #%% Useful functions 
+
+def enforce(ref_plane, tactic_type, quat_0):
+    
+    # define vector perpendicular to encirclement plane
+    if ref_plane == 'horizontal':
+        twist_perp = np.array([0,0,1]).reshape((3,1))
+    elif tactic_type == 'lemni':
+        print('Warning: Set ref_plane to horizontal for lemniscate')
+    
+    # enforce the orientation for lemniscate (later, expand this for the general case)
+    lemni_good = 0
+    if tactic_type == 'lemni':
+        if quat_0[0] == 1:
+            if quat_0[1] == 0:
+                if quat_0[2] == 0:
+                    if quat_0[3] == 0:
+                        lemni_good = 1
+    if tactic_type == 'lemni' and lemni_good == 0:
+        print ('Warning: Set quat_0 to zeros for lemni to work')
+        # travis note for later: you can do this rotation after the fact for the general case
+    
+    return twist_perp
+
 
 # sigma norm
 def sigma_norm(z):    
@@ -80,8 +106,19 @@ def compute_fi_n1p1_x(states_qx, targetsx, transition_loc, transition_rate):
     f_i = 2/(1 + np.exp(-z_i*transition_rate)) -1     
     return f_i
 
+def sigma_1(z):    
+    sigma_1 = np.divide(z,np.sqrt(1+z**2))    
+    return sigma_1
+
 
 #%% main functions
+
+def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
+    
+    u_enc = np.zeros((3,states_q.shape[1]))     
+    u_enc[:,k_node] = - c1_d*sigma_1(states_q[:,k_node]-targets_enc[:,k_node])-c2_d*(states_p[:,k_node] - targets_v_enc[:,k_node])    
+    
+    return u_enc[:,k_node]
 
 def lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp):
     

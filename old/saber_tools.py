@@ -95,8 +95,14 @@ def compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime,
         
     # initialize 
     r_a = sigma_norm(r)                         # lattice separation (sensor range)
-    d_a = sigma_norm(d)                         # lattice separation (goal)   
+    d_a = sigma_norm(d)                         # lattice separation (goal)
+    #r_b = sigma_norm(r_prime)                   # obstacle separation (sensor range)
+    #d_b = sigma_norm(d_prime)                   # obstacle separation (goal range)
+    
     u_int = np.zeros((3,states_q.shape[1]))     # interactions
+    #u_obs = np.zeros((3,states_q.shape[1]))     # obstacles 
+    #u_nav = np.zeros((3,states_q.shape[1]))     # navigation
+
 
     # Lattice Flocking term (phi_alpha)
     # --------------------------------            
@@ -118,6 +124,13 @@ def compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime,
 def compute_cmd_g(states_q, states_p, targets, targets_v, k_node):
 
     # initialize 
+    #r_a = sigma_norm(r)                         # lattice separation (sensor range)
+    #d_a = sigma_norm(d)                         # lattice separation (goal)
+    #r_b = sigma_norm(r_prime)                   # obstacle separation (sensor range)
+    #d_b = sigma_norm(d_prime)                   # obstacle separation (goal range)
+       
+    #u_int = np.zeros((3,states_q.shape[1]))     # interactions
+    #u_obs = np.zeros((3,states_q.shape[1]))     # obstacles 
     u_nav = np.zeros((3,states_q.shape[1]))     # navigation
 
     # Navigation term (phi_gamma)
@@ -129,10 +142,17 @@ def compute_cmd_g(states_q, states_p, targets, targets_v, k_node):
 # obstacle avoidance command
 # --------------------------
 def compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime):
-      
+    
+    
     # initialize 
+    #r_a = sigma_norm(r)                         # lattice separation (sensor range)
+    #d_a = sigma_norm(d)                         # lattice separation (goal)
+    #r_b = sigma_norm(r_prime)                   # obstacle separation (sensor range)
     d_b = sigma_norm(d_prime)                   # obstacle separation (goal range)
+    
+    #u_int = np.zeros((3,states_q.shape[1]))     # interactions
     u_obs = np.zeros((3,states_q.shape[1]))     # obstacles 
+    #u_nav = np.zeros((3,states_q.shape[1]))     # navigation
     
     # Obstacle Avoidance term (phi_beta)
     # ---------------------------------   

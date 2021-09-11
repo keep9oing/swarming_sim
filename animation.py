@@ -87,11 +87,11 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
     # labels
     # ------
     
-    if tactic_type < 2 :
+    if tactic_type == 'reynolds' or tactic_type == 'saber' :
         mode='Flocking'
-    elif tactic_type == 2:
+    elif tactic_type == 'circle':
         mode = 'Mode: Dynamic Encirclement'
-    elif tactic_type == 8:
+    elif tactic_type == 'lemni':
         mode = 'Mode: Dynamic Lemniscate'
     
     titleTime = ax.text2D(0.05, 0.95, "", transform=ax.transAxes)
