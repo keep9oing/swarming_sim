@@ -40,8 +40,8 @@ def evolve_sat(Ts, state, cmd):
 def evolve(Ts, state, cmd):
     
     # constraints
-    vmax = 1000
-    vmin = -1000
+    #vmax = 1000
+    #vmin = -1000
 
     #discretized doubple integrator 
     state[0:3,:] = state[0:3,:] + state[3:6,:]*Ts

@@ -39,9 +39,9 @@ import swarm_metrics
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 7        # number of vehicles
+nVeh    = 7         # number of vehicles
 iSpread = 100       # initial spread of vehicles
-escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
+escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'reynolds'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
@@ -243,8 +243,8 @@ while round(t,3) < Tf:
     # --------------------
     
     # updates 
-    centroid = tools.centroid(state[0:3,:].transpose())
-    swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
+    #centroid = tools.centroid(state[0:3,:].transpose())
+    #swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
      
     #if flocking
     if tactic_type == 'reynolds' or tactic_type == 'saber' :
@@ -267,6 +267,8 @@ while round(t,3) < Tf:
     
     # Compute metrics
     # ---------------
+    centroid = tools.centroid(state[0:3,:].transpose())
+    swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
     metrics_order = swarm_metrics.order(states_p)
     
     # Add other vehicles as obstacles (optional, default = 0)

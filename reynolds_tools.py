@@ -26,8 +26,6 @@ far_away = 300          # when to go back to centroid
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
 agents_min_coh = 5      # min number of agents
 
-
-
 # Some useful functions
 # ---------------------
 
