@@ -29,9 +29,7 @@ import encirclement_tools as encircle_tools
 import ctrl_tactic as tactic 
 import pickle 
 import quaternions as quat
-#import random 
 import lemni_tools 
-
 import swarm_metrics 
 
 #%% Setup Simulation
@@ -241,11 +239,7 @@ while round(t,3) < Tf:
         
     #%% Compute Trajectory
     # --------------------
-    
-    # updates 
-    #centroid = tools.centroid(state[0:3,:].transpose())
-    #swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
-     
+         
     #if flocking
     if tactic_type == 'reynolds' or tactic_type == 'saber' :
         trajectory = targets 
@@ -260,7 +254,7 @@ while round(t,3) < Tf:
         # compute trajectory
         trajectory, lemni = lemni_tools.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
                 
-    # Prep to compute commands (next step)
+    #%% Prep for compute commands (next step)
     # ----------------------------
     states_q = state[0:3,:]     # positions
     states_p = state[3:6,:]     # velocities 
@@ -280,7 +274,7 @@ while round(t,3) < Tf:
         states_plus = np.vstack((state[0:3,:], d_prime*np.ones((1,state.shape[1])))) 
         obstacles_plus = np.hstack((obstacles, states_plus))
             
-    # Compute the commads (next step)
+    #%% Compute the commads (next step)
     # --------------------------------       
     cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
        
