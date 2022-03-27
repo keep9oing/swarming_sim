@@ -47,7 +47,7 @@ tactic_type = 'lemni'
                 # lemni = dynamic lemniscate
 
 # speed of target
-tSpeed = 0.2
+tSpeed = 0.25
 
 # parameters for dynamic encirclement and lemniscate
 r_desired = 10                                   # desired radius of encirclement [m]
@@ -103,7 +103,7 @@ if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*1.5
+oSpread = iSpread*2
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -115,7 +115,7 @@ oSpread = iSpread*1.5
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+7                  # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+5                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
