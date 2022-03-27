@@ -14,16 +14,16 @@ import numpy as np
 # Hyperparameters
 # ----------------
 
-cd_1 = 0.4              # cohesion
+cd_1 = 0.1              # cohesion
 cd_2 = 0.3              # alignment
-cd_3 = 0.8              # separation
-cd_track = 0.5          # nominally, zero
+cd_3 = 0.4              # separation
+cd_track = 0.5          # nominally, zero, unless escorting, then ensure >0
 #cd_4 = 0               # navigation (Note: will get modified below, depending on case)
-maxu = 10               # max input (per rule)
-maxv = 100              # max v
+maxu = 10               # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
+maxv = 100              # max v                 note: dynamics *.evolve_sat must be used for constraints
 recovery = 1            # recover if far away (0 = no, 1 = yes)
-far_away = 300          # when to go back to centroid
-mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
+far_away = 300          # recover how far away (i.e. when to go back to centroid)?
+mode_min_coh = 0        # enforce min # of agents (0 = no, 1 = yes)
 agents_min_coh = 3      # min number of agents
 
 # Some useful functions

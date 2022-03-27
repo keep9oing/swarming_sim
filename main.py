@@ -39,8 +39,8 @@ Tf      = 30        # final time
 Ts      = 0.02      # sample time
 nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
-escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'saber'     
+escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
+tactic_type = 'reynolds'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -97,13 +97,13 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 0    # number of obstacles 
+nObs = 15    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*1
+oSpread = iSpread*5
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -211,9 +211,9 @@ while round(t,3) < Tf:
     # Update the obstacle
     # manual - make the target an obstacle
     if escort == 1:
-        obstacles[0,:] = targets[0,0]     # position (x)
-        obstacles[1,:] = targets[1,0]     # position (y)
-        obstacles[2,:] = targets[2,0]     # position (z)
+        obstacles[0,0] = targets[0,0]     # position (x)
+        obstacles[1,0] = targets[1,0]     # position (y)
+        obstacles[2,0] = targets[2,0]     # position (z)
 
     # Evolve the states
     # -----------------
