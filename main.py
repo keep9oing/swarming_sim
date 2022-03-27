@@ -37,17 +37,17 @@ import swarm_metrics
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 7         # number of vehicles
+nVeh    = 3         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'reynolds'     
+tactic_type = 'lemni'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
                 # lemni = dynamic lemniscate
 
 # speed of target
-tSpeed = 1
+tSpeed = 0.1
 
 # parameters for dynamic encirclement and lemniscate
 r_desired = 5                                   # desired radius of encirclement [m]
@@ -97,13 +97,13 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 15    # number of obstacles 
+nObs = 30    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*5
+oSpread = iSpread*1
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -115,7 +115,8 @@ oSpread = iSpread*5
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15     # position (z)
+    #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+0.5                             # radii of obstacle(s)
 
 # manual - make the target an obstacle
