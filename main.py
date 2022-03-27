@@ -35,9 +35,9 @@ import swarm_metrics
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 30        # final time 
+Tf      = 90        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 3         # number of vehicles
+nVeh    = 15         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'lemni'     
@@ -47,12 +47,12 @@ tactic_type = 'lemni'
                 # lemni = dynamic lemniscate
 
 # speed of target
-tSpeed = 0.1
+tSpeed = 0.2
 
 # parameters for dynamic encirclement and lemniscate
-r_desired = 5                                   # desired radius of encirclement [m]
+r_desired = 10                                   # desired radius of encirclement [m]
 ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
-phi_dot_d = 0.12                                # how fast to encircle
+phi_dot_d = 0.05 # 0.12                                # how fast to encircle
 unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
 lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
 quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
@@ -61,7 +61,7 @@ quat_0_ = quat.quatjugate(quat_0)               # used to untwist
 # range parameters 
 d = 5                       # lattice scale (Saber flocking, distance between a-agents)
 r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
-d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+d_prime = 1 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
 r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
 vehObs = 0                  # include other vehicles as obstacles [0 = no, 1 = yes] 
 
@@ -97,13 +97,13 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 30    # number of obstacles 
+nObs = 40    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*1
+oSpread = iSpread*1.5
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -115,16 +115,16 @@ oSpread = iSpread*1
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15     # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+7                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
-    obstacles[3,:] = np.random.rand(1,nObs)+0.5                             # radii of obstacle(s)
+    obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
 # manual - make the target an obstacle
 if escort == 1:
     obstacles[0,0] = targets[0,0]     # position (x)
     obstacles[1,0] = targets[1,0]     # position (y)
     obstacles[2,0] = targets[2,0]     # position (z)
-    obstacles[3,0] = 5              # radii of obstacle(s)
+    obstacles[3,0] = 0.5              # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes
