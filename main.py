@@ -38,9 +38,9 @@ Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
 nVeh    = 7         # number of vehicles
-iSpread = 100       # initial spread of vehicles
+iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'reynolds'     
+tactic_type = 'saber'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -217,8 +217,8 @@ while round(t,3) < Tf:
 
     # Evolve the states
     # -----------------
-    #state = node.evolve(Ts, state, cmd)
-    state = node.evolve_sat(Ts, state, cmd)
+    state = node.evolve(Ts, state, cmd)
+    #state = node.evolve_sat(Ts, state, cmd)
     
     # Store results
     # -------------
