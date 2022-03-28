@@ -47,7 +47,7 @@ tactic_type = 'lemni'
                 # lemni = dynamic lemniscate
 
 # speed of target
-tSpeed = 0.25
+tSpeed = 1
 
 # parameters for dynamic encirclement and lemniscate
 r_desired = 10                                   # desired radius of encirclement [m]
@@ -61,7 +61,7 @@ quat_0_ = quat.quatjugate(quat_0)               # used to untwist
 # range parameters 
 d = 5                       # lattice scale (Saber flocking, distance between a-agents)
 r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
-d_prime = 1 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
 r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
 vehObs = 0                  # include other vehicles as obstacles [0 = no, 1 = yes] 
 
@@ -97,7 +97,7 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 40    # number of obstacles 
+nObs = 50    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
@@ -115,7 +115,7 @@ oSpread = iSpread*2
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+5                  # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+7                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
