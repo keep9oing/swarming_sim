@@ -35,22 +35,22 @@ import swarm_metrics
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 90        # final time 
+Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 15         # number of vehicles
+nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'lemni'     
+tactic_type = 'circle'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
                 # lemni = dynamic lemniscate
 
 # speed of target
-tSpeed = 1
+tSpeed = 0.1
 
 # parameters for dynamic encirclement and lemniscate
-r_desired = 10                                   # desired radius of encirclement [m]
+r_desired = 5                                   # desired radius of encirclement [m]
 ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
 phi_dot_d = 0.05 # 0.12                                # how fast to encircle
 unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
@@ -97,7 +97,7 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 50    # number of obstacles 
+nObs = 0    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
