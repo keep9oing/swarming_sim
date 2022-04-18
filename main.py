@@ -98,13 +98,13 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 5    # number of obstacles 
+nObs = 10    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*0.5
+oSpread = iSpread
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -116,7 +116,7 @@ oSpread = iSpread*0.5
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15                  # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+10                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
