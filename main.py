@@ -31,16 +31,17 @@ import pickle
 import quaternions as quat
 import lemni_tools 
 import swarm_metrics 
+#import matplotlib.pyplot as plt
 
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 7         # number of vehicles
+nVeh    = 15         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'circle'     
+tactic_type = 'lemni'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -97,13 +98,13 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 0    # number of obstacles 
+nObs = 5    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread*2
+oSpread = iSpread*0.5
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -115,7 +116,7 @@ oSpread = iSpread*2
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+7                  # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
@@ -177,8 +178,8 @@ lemni_all      = np.zeros([nSteps, nVeh])
 # initial metrics
 #metrics_order_all = np.zeros(nSteps)
 #metrics_order = 0
-metrics_order_all = np.zeros((nSteps,3))
-metrics_order = np.zeros((1,3))
+metrics_order_all = np.zeros((nSteps,5))
+metrics_order = np.zeros((1,5))
 
 
 
@@ -270,7 +271,7 @@ while round(t,3) < Tf:
     centroid = tools.centroid(state[0:3,:].transpose())
     swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
     metrics_order[0,0] = swarm_metrics.order(states_p)
-    metrics_order[0,1:3] = swarm_metrics.separation(states_q,targets[0:3,:])
+    metrics_order[0,1:5] = swarm_metrics.separation(states_q,targets[0:3,:],obstacles)
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------

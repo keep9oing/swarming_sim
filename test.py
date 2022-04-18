@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-
+#%% 
 i = 0
 r = 5
 phi = 0
@@ -55,7 +55,6 @@ while(1):
 #%%
 
 
-
 fig, ax = plt.subplots()
 ax.set_title('Trajectory in x-y plane')
 ax.set_xlabel('x-direction')
@@ -82,5 +81,34 @@ ax.set_xlim(-6,6)
 ax.set_ylim(-6,6)
 ax.plot(store[0,:], store[2,:])
 ax.plot(0,0,'or')
+
+#%% error bars plot
+
+y = metrics_order_all[2::,1]
+error = metrics_order_all[2::,2]
+x = t_all[2::]
+
+# orange
+#colour = '#CC4F1B'
+#colour2 = '#FF9848'
+
+# green
+# colour = '#3F7F4C'
+# colour2 = '#7EFF99'
+
+# blue
+colour ='#1B2ACC'
+colour2 = '#089FFF'
+
+
+
+plt.plot(x, y, 'k', color=colour)
+plt.fill_between(x, y-error, y+error,
+    alpha=0.3, edgecolor=colour, facecolor=colour2,
+    linewidth=0)
+plt.title('Distance from target over time')
+plt.xlabel('time [s]')
+plt.ylabel('Mean and variance [m]')
+
 
 
