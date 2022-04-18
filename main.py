@@ -38,7 +38,7 @@ import swarm_metrics
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 15         # number of vehicles
+nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'lemni'     
@@ -98,7 +98,7 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 10    # number of obstacles 
+nObs = 0    # number of obstacles 
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1

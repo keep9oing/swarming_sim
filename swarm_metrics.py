@@ -51,9 +51,13 @@ def separation(states_q,target_q,obstacles):
     
     # distance from obstacles
     # -----------------------
-    seps_obs=cdist(states_q.transpose(), obstacles[0:3,:].transpose()) - obstacles[3,:]
-    means_obs = np.mean(seps_obs) 
-    varis_obs = np.var(seps_obs)
+    if obstacles.shape[1] != 0:
+        seps_obs=cdist(states_q.transpose(), obstacles[0:3,:].transpose()) - obstacles[3,:]
+        means_obs = np.mean(seps_obs) 
+        varis_obs = np.var(seps_obs)
+    else:
+        means_obs = 0
+        varis_obs = 0
     
     return means, varis, means_obs, varis_obs
     
