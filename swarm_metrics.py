@@ -9,6 +9,8 @@ This program computes some useful swarm metrics
 """
 
 import numpy as np
+from scipy.spatial.distance import cdist
+
 
 
 #%% Order
@@ -34,3 +36,21 @@ def order(states_p):
             order = np.divide(order,N*(N-1))
             
     return order
+
+
+def separation(states_q,target_q):
+    
+    # note: replace target_q with states_q to get separation between agents
+    seps=cdist(states_q.transpose(), np.reshape(target_q[:,0],(-1,1)).transpose())
+    #seps=cdist(states_q.transpose(), states_q.transpose())
+
+    vals = np.unique(seps[np.where(seps!=0)])
+    
+    means = np.mean(vals)
+    varis = np.var(vals)
+    
+    return means, varis
+    
+    
+
+    

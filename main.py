@@ -37,9 +37,9 @@ import swarm_metrics
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 12         # number of vehicles
+nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
-escort  = 1         # escort/ target tracking? (0 = no, 1 = yes)
+escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'circle'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
@@ -70,7 +70,7 @@ vehObs = 0                  # include other vehicles as obstacles [0 = no, 1 = y
 state = np.zeros((6,nVeh))
 state[0,:] = iSpread*(np.random.rand(1,nVeh)-0.5)                   # position (x)
 state[1,:] = iSpread*(np.random.rand(1,nVeh)-0.5)                   # position (y)
-state[2,:] = np.maximum((iSpread*np.random.rand(1,nVeh)-0.5),2)+14  # position (z)
+state[2,:] = np.maximum((iSpread*np.random.rand(1,nVeh)-0.5),2)+5  # position (z)
 state[3,:] = 0                                                  # velocity (vx)
 state[4,:] = 0                                                  # velocity (vy)
 state[5,:] = 0                                                  # velocity (vz)
@@ -175,8 +175,13 @@ f_all          = np.ones(nSteps)
 lemni_all      = np.zeros([nSteps, nVeh])
 
 # initial metrics
-metrics_order_all = np.zeros(nSteps)
-metrics_order = 0
+#metrics_order_all = np.zeros(nSteps)
+#metrics_order = 0
+metrics_order_all = np.zeros((nSteps,3))
+metrics_order = np.zeros((1,3))
+
+
+
 
 t_all[0]                = Ti
 states_all[0,:,:]       = state
@@ -185,7 +190,7 @@ targets_all[0,:,:]      = targets
 obstacles_all[0,:,:]    = obstacles
 centroid_all[0,:,:]     = centroid
 f_all[0]                = f
-metrics_order_all[0]    = metrics_order
+metrics_order_all[0,:]    = metrics_order
 
 
 lemni = np.zeros([1, nVeh])
@@ -231,7 +236,7 @@ while round(t,3) < Tf:
     centroid_all[i,:,:]     = centroid
     f_all[i]                = f
     lemni_all[i,:]          = lemni
-    metrics_order_all[i]    = metrics_order
+    metrics_order_all[i,:]    = metrics_order
     
     # Increment 
     # ---------
@@ -264,7 +269,8 @@ while round(t,3) < Tf:
     # ---------------
     centroid = tools.centroid(state[0:3,:].transpose())
     swarm_prox = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
-    metrics_order = swarm_metrics.order(states_p)
+    metrics_order[0,0] = swarm_metrics.order(states_p)
+    metrics_order[0,1:3] = swarm_metrics.separation(states_q,targets[0:3,:])
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------
