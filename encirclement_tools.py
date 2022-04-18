@@ -74,6 +74,20 @@ def centroid(points):
     return centroid.transpose() 
 
 
+# # DEV: matrix for vectorized (i.e. faster) compute (this doesn't work yet)
+# # -------------------------------------------
+# def buildM(n):
+#     M = -np.eye(n, k=1) - np.eye(n, k=-1) + 2*np.eye(n)
+#     M[-1,0] = -1
+#     M[0,-1] = -1
+#     return M
+
+# def unwrapAngles(angles):
+#     return (angles + np.pi) % (2 * np.pi ) - np.pi
+    
+# # ---------------------------------------------
+
+
 #%% Encirclement calculations
 # ---------------------------
 
@@ -144,6 +158,15 @@ def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
     #phi_desired_i = np.zeros((1,state_shifted.shape[1])) # for desired separation
     #separation_desired = 2*np.pi/state_shifted.shape[1]   
     
+    
+    # # DEV: try faster way (this doesn't work yet)
+    # # ------------------------------------------
+    # M = buildM(state_shifted.shape[1])
+    # gamma = 0.5
+    # polar_phi_sorted_unwrapped = unwrapAngles(polar_phi_sorted)
+    # phi_dot_desired_i = phi_dot_desired + np.reshape(np.divide(1,3)*gamma*np.dot(polar_phi_sorted_unwrapped,M),(1,-1))
+    # # -------------------------------------------
+    
     # identify leading and lagging 
     for ii in range(0,state_shifted.shape[1]):
         # define leading and lagging vehicles (based on angles)
@@ -159,7 +182,9 @@ def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
         
         # compute the desired phi-dot       
         phi_dot_desired_i[0,ii] = phi_dot_i_desired(polar_phi_sorted[ii], polar_phi_sorted[ij], polar_phi_sorted[ik], phi_dot_desired)
-        
+    
+
+    
     # convert the angular speeds back to cartesian (in the correct order)
     # ----------------------------------------------
     xy_dot_desired_i = np.zeros((3,state.shape[1]))
