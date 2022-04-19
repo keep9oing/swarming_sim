@@ -36,10 +36,10 @@ import swarm_metrics
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 60        # final time 
+Tf      = 90        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 200         # number of vehicles
-iSpread = 100       # initial spread of vehicles
+nVeh    = 100         # number of vehicles
+iSpread = 200       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'reynolds'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
@@ -60,7 +60,7 @@ quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be a
 quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
 
 # range parameters 
-d = 2                       # lattice scale (Saber flocking, distance between a-agents)
+d = 5                       # lattice scale (Saber flocking, distance between a-agents)
 r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
 d_prime = 1 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
 r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)

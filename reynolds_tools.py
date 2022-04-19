@@ -14,17 +14,24 @@ import numpy as np
 # Hyperparameters
 # ----------------
 
-cd_1 = 0.2              # cohesion
-cd_2 = 0.3              # alignment
-cd_3 = 0.5              # separation
+cd_1 = 0.3              # cohesion
+cd_2 = 0.4              # alignment
+cd_3 = 0.3              # separation
 cd_track = 0          # nominally, zero, unless escorting, then ensure >0
 #cd_4 = 0               # navigation (Note: will get modified below, depending on case)
 maxu = 10               # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
 maxv = 100              # max v                 note: dynamics *.evolve_sat must be used for constraints
 recovery = 1            # recover if far away (0 = no, 1 = yes)
-far_away = 100          # recover how far away (i.e. when to go back to centroid)?
+far_away = 300          # recover how far away (i.e. when to go back to centroid)?
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
 agents_min_coh = 3      # min number of agents
+
+# rotation matrix for spinner mode (about z)
+spinnerMode = 1
+rangle = np.pi/2
+#rmatrix=np.array([[1,0,0],[0,np.cos(rangle),-np.sin(rangle)],[0,np.sin(rangle),np.cos(rangle)]])
+rmatrix=np.array([[np.cos(rangle),-np.sin(rangle),0],[np.sin(rangle),np.cos(rangle),0],[0,0,1]])
+
 
 # Some useful functions
 # ---------------------
@@ -143,12 +150,20 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
             temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total_coh) - states_q[:,k_node])),norm_coh)-states_p[:,k_node])
             u_coh[:,k_node] = cd_1*norm_sat(temp_u_coh,maxu)
             #print(temp_total_coh)
+            
+            # dev:
+            if spinnerMode ==1:
+                u_coh[:,k_node] = np.dot(rmatrix,cd_1*norm_sat(temp_u_coh,maxu))
         
         # Alignment
         # ---------
         if norm_ali != 0:                 
             temp_u_ali = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm_ali)-states_p[:,k_node])
             u_ali[:,k_node] = cd_2*norm_sat(temp_u_ali,maxu)
+            
+            # dev:
+            #if spinnerMode ==1:
+            #    u_ali[:,k_node] = np.dot(rmatrix,cd_2*norm_sat(temp_u_ali,maxu))
     
     if temp_total_prime != 0 and norm_sep != 0:
             
@@ -165,8 +180,8 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escor
     if recovery == 1:
         # and if far away, adjust gain to drive back
         if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
-            cd_4 = 0.5 # overides set value, so recovery is always a low gain
-            print('agent ', k_node,' strayed too far, navigation reset')
+            cd_4 = 0.3 # overides set value, so recovery is always a low gain
+            #print('agent ', k_node,' strayed too far, navigation reset')
     # # ... or just pass through selected value
     # else:
     #     cd_4 = cd_track
