@@ -17,6 +17,8 @@ import quaternions as quat
 # -----------------
 c1_d = 2                # encirclement 
 c2_d = 2*np.sqrt(2)
+r_max = 10               # max distance to view neighbors
+
 
 
 #%% Useful functions
@@ -179,6 +181,15 @@ def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
             ik = 0
         else:
             ik = ii+1 # leading vehicle 
+        
+        # compute distances
+        dist_lag = np.linalg.norm(state_shifted[0:3,ii]-state_shifted[0:3,ij])
+        dist_lead = np.linalg.norm(state_shifted[0:3,ii]-state_shifted[0:3,ik])
+        
+        # if neighbours too far away, default to the desired encirclement speed
+        if dist_lag > r_max or dist_lag > r_max:
+            phi_dot_desired_i[0,ii] = phi_dot_desired
+            continue
         
         # compute the desired phi-dot       
         phi_dot_desired_i[0,ii] = phi_dot_i_desired(polar_phi_sorted[ii], polar_phi_sorted[ij], polar_phi_sorted[ik], phi_dot_desired)

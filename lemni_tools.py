@@ -243,17 +243,17 @@ def lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,ph
 
 #%% work 
 
-states_q = np.array([2,-10,-10])
-targets = np.array([0,0,0])
-states_q_shifted = states_q - targets
-transition_location = 0
-transition_rate = 0.5
-quat_0 = quat.e2q(np.array([0,np.pi/4,0]))
+# states_q = np.array([2,-10,-10])
+# targets = np.array([0,0,0])
+# states_q_shifted = states_q - targets
+# transition_location = 0
+# transition_rate = 0.5
+# quat_0 = quat.e2q(np.array([0,np.pi/4,0]))
 
-# computes a value between 0 and 1 based on distance from target (@0 = 0, @+/- = +)
-test = compute_fi_n1p1(states_q, targets, transition_location, transition_rate )
-# computes sign based on orientation 
-sign = compute_sign(states_q,targets,quat_0)
+# # computes a value between 0 and 1 based on distance from target (@0 = 0, @+/- = +)
+# test = compute_fi_n1p1(states_q, targets, transition_location, transition_rate )
+# # computes sign based on orientation 
+# sign = compute_sign(states_q,targets,quat_0)
     
 
 

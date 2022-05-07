@@ -21,13 +21,13 @@ cd_track = 0          # nominally, zero, unless escorting, then ensure >0
 #cd_4 = 0               # navigation (Note: will get modified below, depending on case)
 maxu = 10               # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
 maxv = 100              # max v                 note: dynamics *.evolve_sat must be used for constraints
-recovery = 1            # recover if far away (0 = no, 1 = yes)
+recovery = 0            # recover if far away (0 = no, 1 = yes)
 far_away = 300          # recover how far away (i.e. when to go back to centroid)?
 mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
-agents_min_coh = 3      # min number of agents
+agents_min_coh = 2      # min number of agents
 
 # rotation matrix for spinner mode (about z)
-spinnerMode = 1
+spinnerMode = 0
 rangle = np.pi/2
 #rmatrix=np.array([[1,0,0],[0,np.cos(rangle),-np.sin(rangle)],[0,np.sin(rangle),np.cos(rangle)]])
 rmatrix=np.array([[np.cos(rangle),-np.sin(rangle),0],[np.sin(rangle),np.cos(rangle),0],[0,0,1]])
