@@ -16,8 +16,8 @@ import quaternions as quat
 #%% Hyper parameters
 # -----------------
 c1_d = 2                # encirclement 
-c2_d = 2*np.sqrt(2)
-r_max = 10               # max distance to view neighbors
+c2_d = 4*np.sqrt(2)
+r_max = 50               # max distance to view neighbors (nominally, set high)
 
 
 

@@ -36,9 +36,9 @@ import swarm_metrics
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 30        # final time 
+Tf      = 60        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 20         # number of vehicles
+nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'circle'     
@@ -60,11 +60,19 @@ quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be a
 quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
 
 # range parameters 
-d = 5                       # lattice scale (Saber flocking, distance between a-agents)
-r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
-d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
-r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
-vehObs = 0                  # include other vehicles as obstacles [0 = no, 1 = yes] 
+d_alpha = 5             # [note: only used for Saber flocking] lattice scale (Saber flocking, distance between a-agents)
+r_alpha = 2*d_alpha     # range at which neighbours can be sensed (for Saber flocking, this is the interaction range of a-agents)
+d_beta = 2              # [note: only used for Saber flocking] desired separation (Saber flocking, distance between a- and b-agents)
+r_beta = 2*d_beta       # range at which obstacles can be sensed, (for Saber flocking, this is the interaction range of a- and b-agents)
+
+
+# legacy
+# ------
+#d = 5                       # lattice scale (Saber flocking, distance between a-agents)
+#r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
+#d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+#r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
+
 
 # Vehicles states
 # ---------------
@@ -98,7 +106,10 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs = 0    # number of obstacles 
+nObs    = 25     # number of obstacles 
+vehObs  = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
+
+
 # if escorting, need to generate an obstacle 
 if nObs == 0 and escort == 1:
     nObs = 1
@@ -116,7 +127,7 @@ oSpread = iSpread
 if nObs != 0:
     obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
     obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+10                  # position (z)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
     obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
 
@@ -181,9 +192,6 @@ lemni_all      = np.zeros([nSteps, nVeh])
 metrics_order_all = np.zeros((nSteps,5))
 metrics_order = np.zeros((1,5))
 
-
-
-
 t_all[0]                = Ti
 states_all[0,:,:]       = state
 cmds_all[0,:,:]         = cmd
@@ -192,7 +200,6 @@ obstacles_all[0,:,:]    = obstacles
 centroid_all[0,:,:]     = centroid
 f_all[0]                = f
 metrics_order_all[0,:]    = metrics_order
-
 
 lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
@@ -279,17 +286,22 @@ while round(t,3) < Tf:
     if vehObs == 0: 
         obstacles_plus = obstacles
     elif vehObs == 1:
-        states_plus = np.vstack((state[0:3,:], d_prime*np.ones((1,state.shape[1])))) 
+        #states_plus = np.vstack((state[0:3,:], d_prime*np.ones((1,state.shape[1])))) 
+        states_plus = np.vstack((state[0:3,:], d_beta*np.ones((1,state.shape[1])))) 
         obstacles_plus = np.hstack((obstacles, states_plus))
             
     #%% Compute the commads (next step)
     # --------------------------------       
-    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
-       
+    #cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
+    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r_alpha, d_alpha, r_beta, d_beta, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
+      
+    
 #%% Produce animation of simulation
 # ---------------------------------
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
-ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d, d_prime, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+#ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d, d_prime, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d_alpha, d_beta, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+#p
 #plt.show()    
 
 #%% Save stuff
