@@ -36,12 +36,12 @@ import swarm_metrics
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 60        # final time 
+Tf      = 30        # final time 
 Ts      = 0.02      # sample time
 nVeh    = 7         # number of vehicles
 iSpread = 10       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'circle'     
+tactic_type = 'lemni'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -106,7 +106,7 @@ error = state[0:3,:] - targets[0:3,:]
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs    = 25     # number of obstacles 
+nObs    = 0     # number of obstacles 
 vehObs  = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
 
 
