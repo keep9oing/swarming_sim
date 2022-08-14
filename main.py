@@ -6,7 +6,8 @@ This project implements an autonomous, decentralized swarming strategies includi
     - Reynolds rules of flocking ("boids")
     - Olfati-Saber flocking
     - Dynamic Encirclement 
-    - Leminiscatic Arching 
+    - Leminiscatic Arching
+    - Static Shapes
 
 The strategies requires no human invervention once the target is selected and all agents rely on local knowledge only. 
 Each vehicle makes its own decisions about where to go based on its relative position to other vehicles
@@ -31,21 +32,28 @@ import pickle
 import quaternions as quat
 import lemni_tools 
 import swarm_metrics 
-#import matplotlib.pyplot as plt
+import staticShapes_tools as statics
+import matplotlib.pyplot as plt
+#plt.style.use('dark_background')
+#plt.style.use('classic')
+plt.style.use('default')
+#plt.style.available
+#plt.style.use('Solarize_Light2')
 
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
 Tf      = 30        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 7         # number of vehicles
-iSpread = 10       # initial spread of vehicles
+nVeh    = 5         # number of vehicles
+iSpread = 20       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'lemni'     
+tactic_type = 'statics'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
                 # lemni = dynamic lemniscate
+                # statics = static shapes (not ready yet)
 
 # speed of target
 tSpeed = 0.1
@@ -53,9 +61,9 @@ tSpeed = 0.1
 # parameters for dynamic encirclement and lemniscate
 r_desired = 5                                   # desired radius of encirclement [m]
 ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
-phi_dot_d = 0.05 # 0.12                                # how fast to encircle
+phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
 unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
-lemni_type = 2                                  # 0 = surv, 1 = rolling, 2 = mobbing
+lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
 quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
 quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
 
@@ -203,7 +211,12 @@ metrics_order_all[0,:]    = metrics_order
 
 lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
-twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
+
+if tactic_type == 'lemni':
+    twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
+elif tactic_type == 'statics':
+    twist_perp = statics.enforce(ref_plane, tactic_type, quat_0)
+    
 
 #%% start the simulation
 # --------------------
@@ -267,7 +280,16 @@ while round(t,3) < Tf:
     elif tactic_type == 'lemni':
         # compute trajectory
         trajectory, lemni = lemni_tools.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
-                
+    
+    # if static shapes  
+    elif tactic_type == 'statics':
+        # compute trajectory
+        trajectory, lemni = statics.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
+ 
+
+
+
+             
     #%% Prep for compute commands (next step)
     # ----------------------------
     states_q = state[0:3,:]     # positions

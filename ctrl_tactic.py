@@ -15,6 +15,7 @@ import reynolds_tools
 import saber_tools
 import encirclement_tools as encircle_tools
 import lemni_tools
+import staticShapes_tools as statics
 
 
 #%% Setup hyperparameters
@@ -30,6 +31,7 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
     u_obs = np.zeros((3,states_q.shape[1]))     # obstacles 
     u_nav = np.zeros((3,states_q.shape[1]))     # navigation
     u_enc = np.zeros((3,states_q.shape[1]))     # encirclement 
+    u_statics = np.zeros((3,states_q.shape[1])) # statics
     cmd_i = np.zeros((3,states_q.shape[1]))     # store the commands
         
     # if doing Reynolds, reorder the agents 
@@ -73,7 +75,12 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         # ---------------------------- 
         if tactic_type == 'lemni':    
             u_enc[:,k_node] = lemni_tools.compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node)
-          
+        
+        if tactic_type == 'statics':
+            u_statics[:,k_node] = statics.compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node)
+            
+        
+        
         # Mixer
         # -----         
         if tactic_type == 'saber':
@@ -83,7 +90,9 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         elif tactic_type == 'circle':
             cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node] 
         elif tactic_type == 'lemni':
-            cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node] 
+            cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node]
+        elif tactic_type == 'statics':
+            cmd_i[:,k_node] = u_obs[:,k_node] + u_statics[:,k_node]
 
     cmd = cmd_i    
     

@@ -93,6 +93,8 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
         mode = 'Mode: Dynamic Encirclement'
     elif tactic_type == 'lemni':
         mode = 'Mode: Dynamic Lemniscate'
+    elif tactic_type == 'statics':
+        mode = 'Mode: Static Shapes'
     
     titleTime = ax.text2D(0.05, 0.95, "", transform=ax.transAxes)
     #titleType1 = ax.text2D(0.95, 0.95, '%s : %s' % ("Lattice separation", d), transform=ax.transAxes, horizontalalignment='right')
@@ -140,7 +142,8 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
         lines_heads.extend(line_head)
         line_target = ax.plot([], [], [], 'go')
         lines_targets.extend(line_target)       
-        lattice = ax.plot([], [], [], ':', lw=1, color=[0.5,0.5,0.5])
+        #lattice = ax.plot([], [], [], ':', lw=1, color=[0.5,0.5,0.5])
+        lattice = ax.plot([], [], [], ':', lw=1, color='blue')
         lattices.extend(lattice)
 
     # initialize obstacles (if config'd)
@@ -219,10 +222,12 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
         # build lattice
         # -------------
         
-        if f[i*numFrames] < 1:
-            r_ = 0*r_copy
-        else: 
-            r_ = r_copy*2        # just to help visualize vehicle interactions
+        # if f[i*numFrames] < 1:
+        #     r_ = 0*r_copy
+        # else: 
+        #     r_ = r_copy*2        # just to help visualize vehicle interactions
+        
+        r_ = r_copy 
         
         for j in range (0, nVeh):
         
