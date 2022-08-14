@@ -17,7 +17,7 @@ import numpy as np
 cd_1 = 0.3              # cohesion
 cd_2 = 0.4              # alignment
 cd_3 = 0.3              # separation
-cd_track = 0          # nominally, zero, unless escorting, then ensure >0
+cd_track = 0.2          # nominally, zero, unless escorting, then ensure >0
 #cd_4 = 0               # navigation (Note: will get modified below, depending on case)
 maxu = 10               # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
 maxv = 100              # max v                 note: dynamics *.evolve_sat must be used for constraints
