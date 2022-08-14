@@ -227,7 +227,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
         # else: 
         #     r_ = r_copy*2        # just to help visualize vehicle interactions
         
-        r_ = r_copy 
+        r_ = 0*r_copy 
         
         for j in range (0, nVeh):
         

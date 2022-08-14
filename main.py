@@ -48,7 +48,7 @@ Ts      = 0.02      # sample time
 nVeh    = 5         # number of vehicles
 iSpread = 20       # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'statics'     
+tactic_type = 'circle'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
