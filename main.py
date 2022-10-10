@@ -45,9 +45,9 @@ plt.style.use('default')
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 30        # final time 
+Tf      = 90        # final time 
 Ts      = 0.02      # sample time
-nVeh    = 15         # number of vehicles
+nVeh    = 17         # number of vehicles
 iSpread = 10      # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
 tactic_type = 'starling'     
