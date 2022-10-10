@@ -16,6 +16,9 @@ import saber_tools
 import encirclement_tools as encircle_tools
 import lemni_tools
 import staticShapes_tools as statics
+import starling_tools
+#params = np.zeros((4,3))  # store the parameters commands
+
 
 
 #%% Setup hyperparameters
@@ -24,7 +27,7 @@ eps = 0.5
     
 #%% Tactic Command Equations 
 # ------------------------
-def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, escort):   
+def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, escort, params):   
     
     # initialize 
     u_int = np.zeros((3,states_q.shape[1]))     # interactions
@@ -37,6 +40,10 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
     # if doing Reynolds, reorder the agents 
     if tactic_type == 'reynolds':
         distances = reynolds_tools.order(states_q)
+        # if doing Reynolds, reorder the agents 
+    #elif tactic_type == 'starling':
+    #    distances = starling_tools.order(states_q)
+        
    
     # for each vehicle/node in the network
     for k_node in range(states_q.shape[1]): 
@@ -79,6 +86,13 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         if tactic_type == 'statics':
             u_statics[:,k_node] = statics.compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node)
             
+        # Starling
+        # --------
+        if tactic_type == 'starling':
+           # compute command 
+           #cmd_i[:,k_node] = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort)
+           cmd_i[:,k_node], params = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, escort, params, 0.02)
+        
         
         
         # Mixer
@@ -93,10 +107,12 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
             cmd_i[:,k_node] = u_obs[:,k_node] + u_enc[:,k_node]
         elif tactic_type == 'statics':
             cmd_i[:,k_node] = u_obs[:,k_node] + u_statics[:,k_node]
+        elif tactic_type == 'starling':
+            cmd_i[:,k_node] = cmd_i[:,k_node] 
 
     cmd = cmd_i    
     
-    return cmd
+    return cmd, params
 
 
 

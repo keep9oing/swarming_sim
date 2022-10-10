@@ -87,7 +87,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d,
     # labels
     # ------
     
-    if tactic_type == 'reynolds' or tactic_type == 'saber' :
+    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling':
         mode='Flocking'
     elif tactic_type == 'circle':
         mode = 'Mode: Dynamic Encirclement'

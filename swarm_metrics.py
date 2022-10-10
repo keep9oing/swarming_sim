@@ -62,5 +62,11 @@ def separation(states_q,target_q,obstacles):
     return means, varis, means_obs, varis_obs
     
     
-
+def centroid(points):
+    length = points.shape[0]
+    sum_x = np.sum(points[:, 0])
+    sum_y = np.sum(points[:, 1])
+    sum_z = np.sum(points[:, 2])
+    centroid = np.array((sum_x/length, sum_y/length, sum_z/length), ndmin = 2)
+    return centroid.transpose() 
     

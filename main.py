@@ -8,6 +8,7 @@ This project implements an autonomous, decentralized swarming strategies includi
     - Dynamic Encirclement 
     - Leminiscatic Arching
     - Static Shapes
+    - Starling flocking
 
 The strategies requires no human invervention once the target is selected and all agents rely on local knowledge only. 
 Each vehicle makes its own decisions about where to go based on its relative position to other vehicles
@@ -33,6 +34,7 @@ import quaternions as quat
 import lemni_tools 
 import swarm_metrics 
 import staticShapes_tools as statics
+import starling_tools
 import matplotlib.pyplot as plt
 #plt.style.use('dark_background')
 #plt.style.use('classic')
@@ -48,15 +50,16 @@ Ts      = 0.02      # sample time
 nVeh    = 15         # number of vehicles
 iSpread = 10      # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'circle'     
+tactic_type = 'starling'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
                 # lemni = dynamic lemniscate
                 # statics = static shapes (not ready yet)
+                # starling = swar like starlings 
 
 # speed of target
-tSpeed = 0.1
+tSpeed = 0
 
 # parameters for dynamic encirclement and lemniscate
 r_desired = 5                                   # desired radius of encirclement [m]
@@ -87,11 +90,11 @@ r_beta = 2*d_beta       # range at which obstacles can be sensed, (for Saber flo
 state = np.zeros((6,nVeh))
 state[0,:] = iSpread*(np.random.rand(1,nVeh)-0.5)                   # position (x)
 state[1,:] = iSpread*(np.random.rand(1,nVeh)-0.5)                   # position (y)
-state[2,:] = np.maximum((iSpread*np.random.rand(1,nVeh)-0.5),2)+5  # position (z)
+state[2,:] = np.maximum((iSpread*np.random.rand(1,nVeh)-0.5),2)+15  # position (z)
 state[3,:] = 0                                                  # velocity (vx)
 state[4,:] = 0                                                  # velocity (vy)
 state[5,:] = 0                                                  # velocity (vz)
-centroid = encircle_tools.centroid(state[0:3,:].transpose())
+centroid = swarm_metrics.centroid(state[0:3,:].transpose())
 
 # Commands
 # --------
@@ -105,12 +108,17 @@ cmd[2] = np.random.rand(1,nVeh)-0.5      # command (z)
 targets = 4*(np.random.rand(6,nVeh)-0.5)
 targets[0,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
 targets[1,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[2,:] = 15
+targets[2,:] = 22
 targets[3,:] = 0
 targets[4,:] = 0
 targets[5,:] = 0
 targets_encircle = targets.copy()
 error = state[0:3,:] - targets[0:3,:]
+
+# Other Parameters
+# ----------------
+params = np.zeros((4,nVeh))  # store the parameters commands
+
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
@@ -268,7 +276,7 @@ while round(t,3) < Tf:
     # --------------------
          
     #if flocking
-    if tactic_type == 'reynolds' or tactic_type == 'saber' :
+    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling':
         trajectory = targets 
     
     # if encircling
@@ -315,7 +323,7 @@ while round(t,3) < Tf:
     #%% Compute the commads (next step)
     # --------------------------------       
     #cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
-    cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r_alpha, d_alpha, r_beta, d_beta, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
+    cmd, params = tactic.commands(states_q, states_p, obstacles_plus, walls, r_alpha, d_alpha, r_beta, d_beta, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort, params)
       
     
 #%% Produce animation of simulation
