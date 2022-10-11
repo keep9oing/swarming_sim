@@ -3,7 +3,7 @@
 """
 Created on Fri Jan  1 21:26:07 2021
 
-some useful tools for implement dynamic encirclement 
+This module implements dynamic encirclement 
 
 @author: tjards
 """
@@ -13,25 +13,24 @@ import quaternions as quat
 
 # delta_phi_desired = 2Pi/N
 
-#%% Hyper parameters
+#%% Hyperparameters
 # -----------------
-c1_d = 2                # encirclement 
-c2_d = 4*np.sqrt(2)
-r_max = 50               # max distance to view neighbors (nominally, set high)
 
-# after cleanup:
-# parameters for dynamic encirclement and lemniscate
-r_desired = 5                                   # desired radius of encirclement [m]
-ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
-enc_plane = ref_plane # uncessary duplicate (legacy code)
-phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
-unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
-lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
-quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
-quatern = quat_0 # uncessary duplicate (legacy code)
-quat_0_ = quat.quatjugate(quat_0)               # used to untwist   
+# gains
+c1_d        = 2             # position (q)
+c2_d        = 4*np.sqrt(2)  # velocity (p)
 
+# parameters of the circle 
+r_max       = 50            # max distance to view neighbors (nominally, set high)
+r_desired   = 5             # desired radius of encirclement [m]
+phi_dot_d   = 0.1           # desired angular speed of encirclement [m/s] 0.05 # 0.12  
 
+# reference frames
+ref_plane = 'horizontal'                # defines reference plane (default horizontal)
+enc_plane = ref_plane                   # uncessary duplicate (legacy code)
+quat_0 = quat.e2q(np.array([0,0,0]))    # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+quatern = quat_0                        # uncessary duplicate (legacy code)
+quat_0_ = quat.quatjugate(quat_0)       # used to untwist   
 
 #%% Useful functions
 # -------------------
@@ -54,17 +53,8 @@ def cart2polar(x, y):
     theta = np.arctan2(y,x)
     #convert to 0 to 2Pi
     theta = np.mod(theta, 2*np.pi) 
-    
     return r, theta 
 
-# def phi_dot_ik(xi,yi,xk,yk,xi_dot,yi_dot,xk_dot,yk_dot):
-#     x_ik = xi-xk
-#     y_ik = yi-yk
-#     x_ik_dot = xi_dot-xk_dot
-#     y_ik_dot = yi_dot-yk_dot
-#     phi_dot_ik = np.divide(x_ik*y_ik_dot - x_ik_dot*y_ik, (x_ik**2 + y_ik**2))
-#    return phi_dot_ik
-    
 def phi_dot_i_desired(phi_i, phi_j, phi_k, phi_dot_desired):
     gamma = 0.5 # tunable
     phi_ki = np.mod(phi_i - phi_k, 2*np.pi) # make sure between 0 and 2pi
@@ -88,20 +78,6 @@ def centroid(points):
     return centroid.transpose() 
 
 
-# # DEV: matrix for vectorized (i.e. faster) compute (this doesn't work yet)
-# # -------------------------------------------
-# def buildM(n):
-#     M = -np.eye(n, k=1) - np.eye(n, k=-1) + 2*np.eye(n)
-#     M[-1,0] = -1
-#     M[0,-1] = -1
-#     return M
-
-# def unwrapAngles(angles):
-#     return (angles + np.pi) % (2 * np.pi ) - np.pi
-    
-# # ---------------------------------------------
-
-
 #%% Encirclement calculations
 # ---------------------------
 
@@ -112,8 +88,6 @@ def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
     
     return u_enc[:,k_node]
     
-    
-#def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
 def encircle_target(targets, state):
         
     # desired rate of encirclement [rad/s]
@@ -169,19 +143,7 @@ def encircle_target(targets, state):
     # for each vehicle, define a desired angular speed 
     phi_dot_desired_i = np.zeros((1,state_shifted.shape[1]))
     phiDot_out = np.zeros((1,state_shifted.shape[1]))
-    
-    #phi_desired_i = np.zeros((1,state_shifted.shape[1])) # for desired separation
-    #separation_desired = 2*np.pi/state_shifted.shape[1]   
-    
-    
-    # # DEV: try faster way (this doesn't work yet)
-    # # ------------------------------------------
-    # M = buildM(state_shifted.shape[1])
-    # gamma = 0.5
-    # polar_phi_sorted_unwrapped = unwrapAngles(polar_phi_sorted)
-    # phi_dot_desired_i = phi_dot_desired + np.reshape(np.divide(1,3)*gamma*np.dot(polar_phi_sorted_unwrapped,M),(1,-1))
-    # # -------------------------------------------
-    
+     
     # identify leading and lagging 
     for ii in range(0,state_shifted.shape[1]):
         # define leading and lagging vehicles (based on angles)
@@ -200,14 +162,12 @@ def encircle_target(targets, state):
         dist_lead = np.linalg.norm(state_shifted[0:3,ii]-state_shifted[0:3,ik])
         
         # if neighbours too far away, default to the desired encirclement speed
-        if dist_lag > r_max or dist_lag > r_max:
+        if dist_lead > r_max or dist_lag > r_max:
             phi_dot_desired_i[0,ii] = phi_dot_desired
             continue
         
         # compute the desired phi-dot       
         phi_dot_desired_i[0,ii] = phi_dot_i_desired(polar_phi_sorted[ii], polar_phi_sorted[ij], polar_phi_sorted[ik], phi_dot_desired)
-    
-
     
     # convert the angular speeds back to cartesian (in the correct order)
     # ----------------------------------------------
