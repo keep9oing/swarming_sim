@@ -32,6 +32,13 @@ rangle = np.pi/2
 #rmatrix=np.array([[1,0,0],[0,np.cos(rangle),-np.sin(rangle)],[0,np.sin(rangle),np.cos(rangle)]])
 rmatrix=np.array([[np.cos(rangle),-np.sin(rangle),0],[np.sin(rangle),np.cos(rangle),0],[0,0,1]])
 
+# imported as part of cleanup
+d = 5                       # lattice scale (Saber flocking, distance between a-agents)
+r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
+d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
+escort  = 0                 # escort/ target tracking? (0 = no, 1 = yes)
+
 
 # Some useful functions
 # ---------------------
@@ -57,7 +64,10 @@ def order(states_q):
 # Compute commands
 # ----------------
 
-def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances):
+#def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances):
+
+# cleanup:
+def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
 
     # Reynolds Flocking
     # ------------------ 

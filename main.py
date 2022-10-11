@@ -45,12 +45,12 @@ plt.style.use('default')
 #%% Setup Simulation
 # ------------------
 Ti      = 0         # initial time
-Tf      = 90        # final time 
+Tf      = 30       # final time 
 Ts      = 0.02      # sample time
-nVeh    = 17         # number of vehicles
-iSpread = 10      # initial spread of vehicles
+nVeh    = 7       # number of vehicles
+iSpread = 20      # initial spread of vehicles
 escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'starling'     
+tactic_type = 'saber'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -330,7 +330,8 @@ while round(t,3) < Tf:
 # ---------------------------------
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
 #ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d, d_prime, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
-ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d_alpha, d_beta, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+#ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d_alpha, d_beta, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
 #p
 #plt.show()    
 

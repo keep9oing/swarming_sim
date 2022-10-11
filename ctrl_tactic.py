@@ -52,7 +52,9 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         # ------------------
         if tactic_type == 'reynolds':
            # compute command 
-           cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances)
+           # cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances)
+           # cleaned: 
+           cmd_i[:,k_node] = reynolds_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, distances)
            
 
         # Saber Flocking
@@ -61,17 +63,20 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
                
             # Lattice Flocking term (phi_alpha)
             # ---------------------------------
-            u_int[:,k_node] = saber_tools.compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime, d_prime)    
+            #u_int[:,k_node] = saber_tools.compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime, d_prime)    
+            u_int[:,k_node] = saber_tools.compute_cmd_a(states_q, states_p, targets, targets_v, k_node)    
+        
 
             # Navigation term (phi_gamma)
             # ---------------------------
+            #u_nav[:,k_node] = saber_tools.compute_cmd_g(states_q, states_p, targets, targets_v, k_node)
             u_nav[:,k_node] = saber_tools.compute_cmd_g(states_q, states_p, targets, targets_v, k_node)
               
             
         # Obstacle Avoidance term (phi_beta)
         # ---------------------------------   
-        u_obs[:,k_node] = saber_tools.compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime)
-
+        #u_obs[:,k_node] = saber_tools.compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime)
+        u_obs[:,k_node] = saber_tools.compute_cmd_b(states_q, states_p, obstacles, walls, k_node)
 
         # Encirclement term (phi_delta)
         # ---------------------------- 

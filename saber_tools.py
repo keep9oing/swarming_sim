@@ -31,6 +31,13 @@ c2_b = 2*np.sqrt(1)
 c1_g = 3                # target tracking
 c2_g = 2*np.sqrt(3)
 
+# imported after cleanup
+d = 5                       # lattice scale (Saber flocking, distance between a-agents)
+r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
+d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
+r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
+
+
 #%% Useful functions
 # ------------------
 
@@ -91,7 +98,8 @@ def norm_sat(u,maxu):
 
 # interaction command
 # -------------------
-def compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime, d_prime):
+#def compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime, d_prime):
+def compute_cmd_a(states_q, states_p, targets, targets_v, k_node):
         
     # initialize 
     r_a = sigma_norm(r)                         # lattice separation (sensor range)
@@ -128,7 +136,8 @@ def compute_cmd_g(states_q, states_p, targets, targets_v, k_node):
 
 # obstacle avoidance command
 # --------------------------
-def compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime):
+#def compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime):
+def compute_cmd_b(states_q, states_p, obstacles, walls, k_node):
       
     # initialize 
     d_b = sigma_norm(d_prime)                   # obstacle separation (goal range)

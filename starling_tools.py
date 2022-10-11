@@ -23,17 +23,17 @@ s           = 0.1*del_u     # interpolation factor
 R_max       = 100           # interation radius, max
 #n_i        = 0             # topical range count (initialize)
 n_c         = 6.5           # "topical range" (i.e. min number of agents to pay attention to)
-r_sep       = 4 #10 #4         # separation radius
+r_sep       = 10 #4         # separation radius
 r_h         = 0.2           # hard sphere (ignore things too close for cohesion)
 r_roost     = 50            # radius of roost
 w_s         = 1             # weighting factor separation force 
 w_c         = 0.7           # weighting factor for cohesion
 w_a         = 0.2           # weighting factor for alignment
-w_roost_h   = 0.25          # weighting factor for horizontal attraction to roost
+w_roost_h   = 0.2           # weighting factor for horizontal attraction to roost
 w_roost_v   = 0.1           # weighting factor for vertical attraction to roost
-w_rand      = 0.01          # weight factor of random disturbances
+w_rand      = 0.05          # default: 0.01, weight factor of random disturbances
 C_c         = 0.35          # critical centrality below which member is interior to roost
-alpha       = 0.5           # default 0.5, between 0 and 1. modulates how tightly swarms converges into target. 0 is very loose, 1 is very tight 
+alpha       = 0.5           # default: 0.5, between 0 and 1. modulates how tightly swarms converges into target. 0 is very loose, 1 is very tight 
 eps         = 0.00001       # to stop divides by zero
 
 sigma       = np.sqrt(np.divide(np.square(r_sep-r_h),4.60517)) #std dev of the gaussion set, such that at that separation zone, near zero
@@ -208,7 +208,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, escort, params, T
     # RANDOM VECTOR
     # ==============
     
-    np.random.seed(k_node*int(R_i))  # each node had its own unique noise, which we update at same frequency of R_i
+    np.random.seed(k_node)  # each node had its own unique noise (bias)
     u_rand = m*w_rand*2*(np.random.rand(3,1)-0.5) # random is between -1 and 1
     
     # CONSOLIDATION

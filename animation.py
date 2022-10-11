@@ -17,18 +17,18 @@ Writer = animation.writers['ffmpeg']
 writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 20 # frame rate (bigger = slower)
-tail = 400
+tail = 200
 zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 
 
-def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, r, d, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
+def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
     
     # pull out positions
     # ------------------
     nVeh = states_all.shape[2]
     nObs = obstacles_all.shape[2]
-    r_copy = r
+    r_copy = 5 # used to import this
     
     # intermediate variables
     # ----------------------
