@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+This module implements Olfati-Saber flocking
+
 Created on Sat Sep 11 10:17:52 2021
 
 @author: tjards
+
 """
 
 #%% Import stuff
@@ -11,31 +14,31 @@ Created on Sat Sep 11 10:17:52 2021
 import numpy as np
 
 
-
 #%% Hyperparameters
 # -----------------
 
-a = 0.5
-b = 0.5
-c = np.divide(np.abs(a-b),np.sqrt(4*a*b)) 
+# parameters for later functions
+a   = 0.5
+b   = 0.5
+c   = np.divide(np.abs(a-b),np.sqrt(4*a*b)) 
 eps = 0.1
 #eps = 0.5
-h = 0.9
-pi = 3.141592653589793
+h   = 0.9
+pi  = 3.141592653589793
 
 # gains
 c1_a = 2                # lattice flocking
 c2_a = 2*np.sqrt(2)
-c1_b = 1                # obstacle avoidance
-c2_b = 2*np.sqrt(1)
-c1_g = 3                # target tracking
-c2_g = 2*np.sqrt(3)
+c1_b = 3                # obstacle avoidance
+c2_b = 2*np.sqrt(3)
+c1_g = 1                # navigation/target tracking
+c2_g = 2*np.sqrt(1)
 
-# imported after cleanup
-d = 5                       # lattice scale (Saber flocking, distance between a-agents)
-r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
-d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
-r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
+# key ranges 
+d       = 5             # lattice scale (Saber flocking, distance between a-agents)
+r       = 2*d           # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
+d_prime = 2 #0.6*d      # desired separation (Saber flocking, distance between a- and b-agents)
+r_prime = 2*d_prime     # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
 
 
 #%% Useful functions
@@ -98,7 +101,6 @@ def norm_sat(u,maxu):
 
 # interaction command
 # -------------------
-#def compute_cmd_a(states_q, states_p, targets, targets_v, k_node, r, d, r_prime, d_prime):
 def compute_cmd_a(states_q, states_p, targets, targets_v, k_node):
         
     # initialize 
@@ -136,7 +138,6 @@ def compute_cmd_g(states_q, states_p, targets, targets_v, k_node):
 
 # obstacle avoidance command
 # --------------------------
-#def compute_cmd_b(states_q, states_p, obstacles, walls, k_node, r_prime, d_prime):
 def compute_cmd_b(states_q, states_p, obstacles, walls, k_node):
       
     # initialize 
@@ -152,7 +153,6 @@ def compute_cmd_b(states_q, states_p, obstacles, walls, k_node):
         normo = np.linalg.norm(states_q[:,k_node]-obstacles[0:3,k_obstacle])
         
         # ignore if overlapping
-        #if normo == 0:
         if normo < 0.2:
             continue 
         

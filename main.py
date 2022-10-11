@@ -47,11 +47,11 @@ Ti      =   0         # initial time
 Tf      =   30        # final time 
 Ts      =   0.02      # sample time
 nVeh    =   7         # number of vehicles
-iSpread =   5         # initial spread of vehicles
-tSpeed  =   0         # speed of target
+iSpread =   20         # initial spread of vehicles
+tSpeed  =   2         # speed of target
 rVeh    =   2         # physical radius of vehicle 
 
-tactic_type = 'reynolds'     
+tactic_type = 'saber'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # starling = swar like starlings 

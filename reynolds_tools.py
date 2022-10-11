@@ -15,9 +15,9 @@ import numpy as np
 # ----------------
 
 escort          = 0     # escort (i.e. target tracking?): 0 = no, 1 = yes
-cd_1            = 0.3   # cohesion
-cd_2            = 0.4   # alignment
-cd_3            = 0.3   # separation
+cd_1            = 0.3   # cohesion weight
+cd_2            = 0.4   # alignment weight
+cd_3            = 0.3   # separation weight
 cd_track        = 0.2   # nominally, zero, unless escorting, then ensure >0
 #cd_4           = 0     # navigation (Note: will get modified below, depending on case)
 maxu            = 10    # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
@@ -27,16 +27,13 @@ maxv            = 100   # max v                 note: dynamics *.evolve_sat must
 recovery        = 0     # recover if far away (0 = no, 1 = yes)
 far_away        = 300   # recover how far away (i.e. when to go back to centroid)?
 
-# force minimum number of agents?
+# force minimum number of agents for cohesion?
 mode_min_coh    = 1     # enforce min # of agents (0 = no, 1 = yes)
 agents_min_coh  = 2     # min number of agents
 
-# imported as part of cleanup
-d = 5                       # lattice scale 
-r = 2*d                     # range at which neighbours can be sensed 
-d_prime = 2 #0.6*d          # desired separation 
-r_prime = 2*d_prime         # range at which obstacles can be sensed
-
+# key ranges  
+r               = 10    # range at which neighbours can be sensed  
+r_prime         = 4     # range at which obstacles can be sensed
 
 
 # Some useful functions
@@ -63,9 +60,6 @@ def order(states_q):
 # Compute commands
 # ----------------
 
-#def compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort, distances):
-
-# cleanup:
 def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
 
     # Reynolds Flocking
@@ -75,7 +69,7 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
     u_coh = np.zeros((3,states_q.shape[1]))  # cohesion
     u_ali = np.zeros((3,states_q.shape[1]))  # alignment
     u_sep = np.zeros((3,states_q.shape[1]))  # separation
-    u_nav = np.zeros((3,states_q.shape[1]))     # navigation
+    u_nav = np.zeros((3,states_q.shape[1]))  # navigation
     #distances = np.zeros((states_q.shape[1],states_q.shape[1])) # to store distances between nodes
     cmd_i = np.zeros((3,states_q.shape[1])) 
        
@@ -95,13 +89,15 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
             raise Exception('There are an insufficient number of agents for the cohesion mode selected. Minimum number of agents for mode ',agents_min_coh ,' is ', agents_min_coh+2, ' and you have selected ', distances.shape[0] )
     
         r_coh = 0
-        #agents_min_coh = 5
+        # pull agent distantces for this node
         node_ranges = distances[k_node,:]
+        # sort the distances
         node_ranges_sorted = np.sort(node_ranges)
+        # take the distance of the farthest agent that satisfies min count
         r_coh_temp = node_ranges_sorted[agents_min_coh+1]
         r_coh = r_coh_temp
-        #print(r_coh)
     else:
+        # else, just rely on default range
         r_coh = r
           
     # search through each neighbour
@@ -112,17 +108,17 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
             dist = np.linalg.norm(states_q[:,k_node]-states_q[:,k_neigh])
             
             if dist < 0.1:
+                # print out any collisions 
                 print('collision at agent: ', k_node)
                 continue
     
-            # if it is within the alignment range
+            # if agent is within the alignment range
             if dist < np.maximum(r,r_coh):
      
                 # count
                 temp_total += 1                        
      
                 # sum 
-                #sum_poses += states_q[:,k_neigh]
                 sum_velos += states_p[:,k_neigh]
     
             # if within cohesion range 
@@ -133,7 +129,6 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
                 
                 #sum
                 sum_poses += states_q[:,k_neigh]
-    
     
             # if within the separation range 
             if dist < r_prime:
@@ -155,24 +150,14 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
         # Cohesion
         # --------
         if norm_coh != 0:
-            #temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total) - states_q[:,k_node])),norm_coh)-states_p[:,k_node])
             temp_u_coh = (maxv*np.divide(((np.divide(sum_poses,temp_total_coh) - states_q[:,k_node])),norm_coh)-states_p[:,k_node])
             u_coh[:,k_node] = cd_1*norm_sat(temp_u_coh,maxu)
-            #print(temp_total_coh)
-            
-            # dev:
-            #if spinnerMode ==1:
-            #    u_coh[:,k_node] = np.dot(rmatrix,cd_1*norm_sat(temp_u_coh,maxu))
         
         # Alignment
         # ---------
         if norm_ali != 0:                 
             temp_u_ali = (maxv*np.divide((np.divide(sum_velos,temp_total)),norm_ali)-states_p[:,k_node])
             u_ali[:,k_node] = cd_2*norm_sat(temp_u_ali,maxu)
-            
-            # dev:
-            #if spinnerMode ==1:
-            #    u_ali[:,k_node] = np.dot(rmatrix,cd_2*norm_sat(temp_u_ali,maxu))
     
     if temp_total_prime != 0 and norm_sep != 0:
             
@@ -190,18 +175,13 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
         # and if far away, adjust gain to drive back
         if np.linalg.norm(centroid.transpose()-states_q[:,k_node]) > far_away:
             cd_4 = 0.3 # overides set value, so recovery is always a low gain
-            #print('agent ', k_node,' strayed too far, navigation reset')
-    # # ... or just pass through selected value
-    # else:
-    #     cd_4 = cd_track
         
-    # if escorting, track the target
+    # if escorting, track the target (overrides recovery actions)
     if escort == 1:
         cd_4 = cd_track
         if cd_4 == 0:
             print('WARNING: no gain set for tracking target, please set a gain > 0')
         temp_u_nav = (targets[:,k_node]-states_q[:,k_node])
-    # else, load up the centroid for the recovery case
     else:
         temp_u_nav = (centroid.transpose()-states_q[:,k_node])
     

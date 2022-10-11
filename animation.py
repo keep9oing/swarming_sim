@@ -18,9 +18,7 @@ writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 20 # frame rate (bigger = slower)
 tail = 200
-zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
-
-
+zoom = 0    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 #def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
 def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, tactic_type):
