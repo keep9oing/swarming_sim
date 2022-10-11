@@ -14,30 +14,29 @@ import numpy as np
 # Hyperparameters
 # ----------------
 
-cd_1 = 0.3              # cohesion
-cd_2 = 0.4              # alignment
-cd_3 = 0.3              # separation
-cd_track = 0.2          # nominally, zero, unless escorting, then ensure >0
-#cd_4 = 0               # navigation (Note: will get modified below, depending on case)
-maxu = 10               # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
-maxv = 100              # max v                 note: dynamics *.evolve_sat must be used for constraints
-recovery = 0            # recover if far away (0 = no, 1 = yes)
-far_away = 300          # recover how far away (i.e. when to go back to centroid)?
-mode_min_coh = 1        # enforce min # of agents (0 = no, 1 = yes)
-agents_min_coh = 2      # min number of agents
+escort          = 0     # escort (i.e. target tracking?): 0 = no, 1 = yes
+cd_1            = 0.3   # cohesion
+cd_2            = 0.4   # alignment
+cd_3            = 0.3   # separation
+cd_track        = 0.2   # nominally, zero, unless escorting, then ensure >0
+#cd_4           = 0     # navigation (Note: will get modified below, depending on case)
+maxu            = 10    # max input (per rule)  note: dynamics *.evolve_sat must be used for constraints
+maxv            = 100   # max v                 note: dynamics *.evolve_sat must be used for constraints
 
-# rotation matrix for spinner mode (about z)
-spinnerMode = 0
-rangle = np.pi/2
-#rmatrix=np.array([[1,0,0],[0,np.cos(rangle),-np.sin(rangle)],[0,np.sin(rangle),np.cos(rangle)]])
-rmatrix=np.array([[np.cos(rangle),-np.sin(rangle),0],[np.sin(rangle),np.cos(rangle),0],[0,0,1]])
+# recovery actions 
+recovery        = 0     # recover if far away (0 = no, 1 = yes)
+far_away        = 300   # recover how far away (i.e. when to go back to centroid)?
+
+# force minimum number of agents?
+mode_min_coh    = 1     # enforce min # of agents (0 = no, 1 = yes)
+agents_min_coh  = 2     # min number of agents
 
 # imported as part of cleanup
-d = 5                       # lattice scale (Saber flocking, distance between a-agents)
-r = 2*d                     # range at which neighbours can be sensed (Saber flocking, interaction range of a-agents)
-d_prime = 2 #0.6*d          # desired separation (Saber flocking, distance between a- and b-agents)
-r_prime = 2*d_prime         # range at which obstacles can be sensed, (Saber flocking, interaction range of a- and b-agents)
-escort  = 0                 # escort/ target tracking? (0 = no, 1 = yes)
+d = 5                       # lattice scale 
+r = 2*d                     # range at which neighbours can be sensed 
+d_prime = 2 #0.6*d          # desired separation 
+r_prime = 2*d_prime         # range at which obstacles can be sensed
+
 
 
 # Some useful functions
@@ -162,8 +161,8 @@ def compute_cmd(targets, centroid, states_q, states_p, k_node, distances):
             #print(temp_total_coh)
             
             # dev:
-            if spinnerMode ==1:
-                u_coh[:,k_node] = np.dot(rmatrix,cd_1*norm_sat(temp_u_coh,maxu))
+            #if spinnerMode ==1:
+            #    u_coh[:,k_node] = np.dot(rmatrix,cd_1*norm_sat(temp_u_coh,maxu))
         
         # Alignment
         # ---------
