@@ -20,9 +20,27 @@ eps = 0.1
 c1_d = 2                # encirclement 
 c2_d = 2*np.sqrt(2)
 
+# after cleanup
+# parameters for dynamic encirclement and lemniscate
+r_desired = 5                                   # desired radius of encirclement [m]
+ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
+unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
+quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
+
 #%% Useful functions 
 
-def enforce(ref_plane, tactic_type, quat_0):
+def check_targets(targets):
+    # if mobbing, offset targets back down
+    if lemni_type == 2:
+        targets[2,:] -= r_desired
+    return targets
+
+
+#def enforce(ref_plane, tactic_type, quat_0):
+def enforce(tactic_type):
     
     # define vector perpendicular to encirclement plane
     if ref_plane == 'horizontal':
@@ -43,7 +61,6 @@ def enforce(ref_plane, tactic_type, quat_0):
         # travis note for later: you can do this rotation after the fact for the general case
     
     return twist_perp
-
 
 # sigma norm
 def sigma_norm(z):    
@@ -113,6 +130,8 @@ def sigma_1(z):
 
 #%% main functions
 
+twist_perp = enforce('lemni')
+
 def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
     
     u_enc = np.zeros((3,states_q.shape[1]))     
@@ -120,7 +139,8 @@ def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
     
     return u_enc[:,k_node]
 
-def lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp):
+#def lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp):
+def lemni_target(nVeh,lemni_all,state,targets,i,t):
     
     # initialize the lemni twist factor
     lemni = np.zeros([1, nVeh])
@@ -157,8 +177,9 @@ def lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,ph
     # ------------------------------------------
     
     # compute the untwisted trejectory 
-    targets_encircle, phi_dot_desired_i = encircle_tools.encircle_target(targets, state_untwisted, r_desired, phi_dot_d, ref_plane, quat_0)
- 
+    #targets_encircle, phi_dot_desired_i = encircle_tools.encircle_target(targets, state_untwisted, r_desired, phi_dot_d, ref_plane, quat_0)
+    targets_encircle, phi_dot_desired_i = encircle_tools.encircle_target(targets, state_untwisted)
+    
     # TWIST - twist the circle
     # ------------------------
     

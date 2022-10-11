@@ -27,8 +27,9 @@ eps = 0.5
     
 #%% Tactic Command Equations 
 # ------------------------
-def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, escort, params):   
-    
+#def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, escort, params):   
+def commands(states_q, states_p, obstacles, walls, targets, targets_v, targets_enc, targets_v_enc, swarm_prox, tactic_type, centroid, params):   
+     
     # initialize 
     u_int = np.zeros((3,states_q.shape[1]))     # interactions
     u_obs = np.zeros((3,states_q.shape[1]))     # obstacles 
@@ -96,7 +97,8 @@ def commands(states_q, states_p, obstacles, walls, r, d, r_prime, d_prime, targe
         if tactic_type == 'starling':
            # compute command 
            #cmd_i[:,k_node] = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, r, r_prime, escort)
-           cmd_i[:,k_node], params = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, escort, params, 0.02)
+           #cmd_i[:,k_node], params = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, escort, params, 0.02)
+           cmd_i[:,k_node], params = starling_tools.compute_cmd(targets, centroid, states_q, states_p, k_node, params, 0.02)
         
         
         

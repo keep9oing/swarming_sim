@@ -22,7 +22,9 @@ zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fi
 
 
 
-def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
+#def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
+def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, tactic_type):
+
     
     # pull out positions
     # ------------------

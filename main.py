@@ -48,9 +48,9 @@ Ti      = 0         # initial time
 Tf      = 30       # final time 
 Ts      = 0.02      # sample time
 nVeh    = 7       # number of vehicles
-iSpread = 20      # initial spread of vehicles
-escort  = 0         # escort/ target tracking? (0 = no, 1 = yes)
-tactic_type = 'saber'     
+iSpread = 5      # initial spread of vehicles
+escort  = 0         # escort/ target tracking? (0 = no, 1 = yes) # later, change this to "make target and obstacle, based on tactic type (see where used below)"
+tactic_type = 'lemni'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # circle = encirclement
@@ -62,19 +62,19 @@ tactic_type = 'saber'
 tSpeed = 0
 
 # parameters for dynamic encirclement and lemniscate
-r_desired = 5                                   # desired radius of encirclement [m]
-ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
-phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
-unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
-lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
-quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
-quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
+# r_desired = 5                                   # desired radius of encirclement [m]
+# ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+# phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
+# unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+# lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
+# quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+# quat_0_ = quat.quatjugate(quat_0)               # used to untwist                               
 
 # range parameters 
-d_alpha = 5             # [note: only used for Saber flocking] lattice scale (Saber flocking, distance between a-agents)
-r_alpha = 2*d_alpha     # range at which neighbours can be sensed (for Saber flocking, this is the interaction range of a-agents)
-d_beta = 2              # [note: only used for Saber flocking] desired separation (Saber flocking, distance between a- and b-agents)
-r_beta = 2*d_beta       # range at which obstacles can be sensed, (for Saber flocking, this is the interaction range of a- and b-agents)
+#d_alpha = 5             # [note: only used for Saber flocking] lattice scale (Saber flocking, distance between a-agents)
+#r_alpha = 2*d_alpha     # range at which neighbours can be sensed (for Saber flocking, this is the interaction range of a-agents)
+#d_beta = 2              # [note: only used for Saber flocking] desired separation (Saber flocking, distance between a- and b-agents)
+#r_beta = 2*d_beta       # range at which obstacles can be sensed, (for Saber flocking, this is the interaction range of a- and b-agents)
 
 
 # legacy
@@ -220,10 +220,12 @@ metrics_order_all[0,:]    = metrics_order
 lemni = np.zeros([1, nVeh])
 lemni_all[0,:] = lemni
 
-if tactic_type == 'lemni':
-    twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
-elif tactic_type == 'statics':
-    twist_perp = statics.enforce(ref_plane, tactic_type, quat_0)
+# if tactic_type == 'lemni':
+#     #twist_perp = lemni_tools.enforce(ref_plane, tactic_type, quat_0)
+#     twist_perp = lemni_tools.enforce(tactic_type)
+# elif tactic_type == 'statics':
+#     #twist_perp = statics.enforce(ref_plane, tactic_type, quat_0)
+#     twist_perp = statics.enforce(tactic_type)
     
 
 #%% start the simulation
@@ -231,10 +233,13 @@ elif tactic_type == 'statics':
 
 while round(t,3) < Tf:
   
+    # we need to move the 'target'for mobbing (a type of lemniscate)
+    if tactic_type == 'lemni':
+        targets = lemni_tools.check_targets(targets)
 
-    # if mobbing, offset targets back down
-    if tactic_type == 'lemni' and lemni_type == 2:
-        targets[2,:] -= r_desired
+    # # if mobbing, offset targets back down
+    # if tactic_type == 'lemni' and lemni_type == 2:
+    #     targets[2,:] -= r_desired
     
     # Evolve the target
     # -----------------
@@ -282,17 +287,21 @@ while round(t,3) < Tf:
     # if encircling
     if tactic_type == 'circle': 
         # compute trajectory
-        trajectory, _ = encircle_tools.encircle_target(targets, state, r_desired, phi_dot_d, ref_plane, quat_0)
+        #trajectory, _ = encircle_tools.encircle_target(targets, state, r_desired, phi_dot_d, ref_plane, quat_0)
+        trajectory, _ = encircle_tools.encircle_target(targets, state)
     
     # if lemniscating
     elif tactic_type == 'lemni':
         # compute trajectory
-        trajectory, lemni = lemni_tools.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
+        #trajectory, lemni = lemni_tools.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
+        trajectory, lemni = lemni_tools.lemni_target(nVeh,lemni_all,state,targets,i,t)
+    
     
     # if static shapes  
     elif tactic_type == 'statics':
         # compute trajectory
-        trajectory, lemni = statics.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
+        #trajectory, lemni = statics.lemni_target(nVeh,r_desired,lemni_type,lemni_all,state,targets,i,unit_lem,phi_dot_d,ref_plane,quat_0,t,twist_perp)
+        trajectory, lemni = statics.lemni_target(nVeh,lemni_all,state,targets,i,t)
  
 
 
@@ -316,6 +325,7 @@ while round(t,3) < Tf:
     if vehObs == 0: 
         obstacles_plus = obstacles
     elif vehObs == 1:
+        d_beta = 2 # note: this is the radius of the vehicles, probably need to define this above
         #states_plus = np.vstack((state[0:3,:], d_prime*np.ones((1,state.shape[1])))) 
         states_plus = np.vstack((state[0:3,:], d_beta*np.ones((1,state.shape[1])))) 
         obstacles_plus = np.hstack((obstacles, states_plus))
@@ -323,15 +333,18 @@ while round(t,3) < Tf:
     #%% Compute the commads (next step)
     # --------------------------------       
     #cmd = tactic.commands(states_q, states_p, obstacles_plus, walls, r, d, r_prime, d_prime, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort)
-    cmd, params = tactic.commands(states_q, states_p, obstacles_plus, walls, r_alpha, d_alpha, r_beta, d_beta, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort, params)
-      
+    #cmd, params = tactic.commands(states_q, states_p, obstacles_plus, walls, r_alpha, d_alpha, r_beta, d_beta, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, escort, params)
+    cmd, params = tactic.commands(states_q, states_p, obstacles_plus, walls, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, params)
+       
     
 #%% Produce animation of simulation
 # ---------------------------------
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
 #ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d, d_prime, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
 #ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, d_alpha, d_beta, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
-ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+#ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, r_desired, tactic_type)
+ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, tactic_type)
+#
 #p
 #plt.show()    
 

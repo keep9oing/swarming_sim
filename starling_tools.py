@@ -68,7 +68,7 @@ def gaussian_set(d_ij,r_h, sigma):
 # --------------------------------------
 
 # this is run for each node
-def compute_cmd(targets, centroid, states_q, states_p, k_node, escort, params, Ts):
+def compute_cmd(targets, centroid, states_q, states_p, k_node, params, Ts):
 
     #initialize commands 
     # ------------------

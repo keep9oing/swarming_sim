@@ -19,6 +19,18 @@ c1_d = 2                # encirclement
 c2_d = 4*np.sqrt(2)
 r_max = 50               # max distance to view neighbors (nominally, set high)
 
+# after cleanup:
+# parameters for dynamic encirclement and lemniscate
+r_desired = 5                                   # desired radius of encirclement [m]
+ref_plane = 'horizontal'                        # defines reference plane (default horizontal)
+enc_plane = ref_plane # uncessary duplicate (legacy code)
+phi_dot_d = 0.1 # 0.05 # 0.12                                # how fast to encircle
+unit_lem = np.array([1,0,0]).reshape((3,1))     # sets twist orientation (i.e. orientation of lemniscate along x)
+lemni_type = 0                                  # 0 = surv, 1 = rolling, 2 = mobbing
+quat_0 = quat.e2q(np.array([0,0,0]))           # if lemniscate, this has to be all zeros (consider expanding later to rotate the whole swarm)
+quatern = quat_0 # uncessary duplicate (legacy code)
+quat_0_ = quat.quatjugate(quat_0)               # used to untwist   
+
 
 
 #%% Useful functions
@@ -101,7 +113,8 @@ def compute_cmd(states_q, states_p, targets_enc, targets_v_enc, k_node):
     return u_enc[:,k_node]
     
     
-def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
+#def encircle_target(targets, state, r_desired, phi_dot_d, enc_plane, quatern):
+def encircle_target(targets, state):
         
     # desired rate of encirclement [rad/s]
     # -----------------------------------
