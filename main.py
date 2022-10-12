@@ -47,11 +47,11 @@ Ti      =   0         # initial time
 Tf      =   30        # final time 
 Ts      =   0.02      # sample time
 nVeh    =   7         # number of vehicles
-iSpread =   20         # initial spread of vehicles
+iSpread =   15         # initial spread of vehicles
 tSpeed  =   0         # speed of target
 rVeh    =   2         # physical radius of vehicle 
 
-tactic_type = 'circle'     
+tactic_type = 'lemni'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # starling = swar like starlings 
@@ -196,15 +196,14 @@ metrics_order_all[0,:]  = metrics_order
 lemni                   = np.zeros([1, nVeh])
 lemni_all[0,:]          = lemni
 
+# we need to move the 'target' for mobbing (a type of lemniscate)
+if tactic_type == 'lemni':
+    targets = lemni_tools.check_targets(targets)
 
 #%% start the simulation
 # --------------------
 
 while round(t,3) < Tf:
-  
-    # we need to move the 'target' for mobbing (a type of lemniscate)
-    if tactic_type == 'lemni':
-        targets = lemni_tools.check_targets(targets)
     
     # Evolve the target
     # -----------------
