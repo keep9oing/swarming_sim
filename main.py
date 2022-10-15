@@ -8,7 +8,7 @@ This project implements an autonomous, decentralized swarming strategies includi
     - Starling flocking
     - Dynamic Encirclement 
     - Leminiscatic Arching
-    - Static Shapes
+    - Static Shapes (prototype)
 
 The strategies requires no human invervention once the target is selected and all agents rely on local knowledge only. 
 Each vehicle makes its own decisions about where to go based on its relative position to other vehicles

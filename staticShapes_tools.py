@@ -5,7 +5,7 @@ Created on Sun Jun 26 20:26:17 2022
 
 Static Shapes 
 
-Note: this is working but very inefficient 
+Note: this is only sort of working and is very inefficient 
 
 
 
