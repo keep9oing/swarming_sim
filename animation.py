@@ -17,18 +17,18 @@ Writer = animation.writers['ffmpeg']
 writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 20 # frame rate (bigger = slower)
-tail = 200
-zoom = 0    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
+tail = 40
+zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 #def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
-def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, tactic_type):
+def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, tactic_type, pins_all):
 
     
     # pull out positions
     # ------------------
     nVeh = states_all.shape[2]
     nObs = obstacles_all.shape[2]
-    r_copy = 5 # used to import this
+    #r_copy = 0 # used to import this
     
     # intermediate variables
     # ----------------------
@@ -41,7 +41,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
     x_v = states_all[:,3,:]
     y_v = states_all[:,4,:]
     z_v = states_all[:,5,:]
-    head = 2
+    head = 0.02
     x_head = states_all[:,0,:] + head*x_v
     y_head = states_all[:,1,:] + head*x_v
     z_head = states_all[:,2,:] + head*x_v
@@ -87,8 +87,8 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
     # labels
     # ------
         
-    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling':
-        mode='Mode: Flocking type '+tactic_type
+    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling' or tactic_type == 'pinning':
+        mode='Mode: '+tactic_type
     elif tactic_type == 'circle':
         mode = 'Mode: Dynamic Encirclement'
     elif tactic_type == 'lemni':
@@ -140,9 +140,9 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
         lines_tails.extend(line_tail)
         line_head = ax.plot([], [], [], '-', lw=1, color='magenta')
         lines_heads.extend(line_head)
-        line_target = ax.plot([], [], [], 'go')
+        line_target = ax.plot([], [], [], 'gx')
         lines_targets.extend(line_target)       
-        #lattice = ax.plot([], [], [], ':', lw=1, color=[0.5,0.5,0.5])
+        #lattice = ax.plot([], [], [], '-', lw=1, color=[0.5,0.5,0.5])
         lattice = ax.plot([], [], [], ':', lw=1, color='blue')
         lattices.extend(lattice)
 
@@ -157,6 +157,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
     # update the lines
     # ----------------
     def update(i):
+        
              
         time = t_all[i*numFrames]
         x = states_all[i*numFrames,0,:]
@@ -187,9 +188,12 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
         z_o = obstacles_all[i*numFrames,2,:]
         r_o = obstacles_all[i*numFrames,3,:]        
         pos = states_all[i*numFrames,0:3,:]
-        x_lat = np.zeros((nVeh,nVeh))
-        y_lat = np.zeros((nVeh,nVeh))
-        z_lat = np.zeros((nVeh,nVeh))
+        #x_lat = np.zeros((nVeh,nVeh))
+        #y_lat = np.zeros((nVeh,nVeh))
+        #z_lat = np.zeros((nVeh,nVeh))
+        x_lat = np.zeros((2*nVeh,nVeh))
+        y_lat = np.zeros((2*nVeh,nVeh))
+        z_lat = np.zeros((2*nVeh,nVeh))
         cx = centroid_all[i*numFrames,0,:]
         cy = centroid_all[i*numFrames,1,:]
         cz = centroid_all[i*numFrames,2,:]
@@ -227,34 +231,70 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
         # else: 
         #     r_ = r_copy*2        # just to help visualize vehicle interactions
         
-        r_ = 0*r_copy 
+        r_ = 1.2*5
         
         for j in range (0, nVeh):
         
-            temp_lat = lattices[j]    
+            temp_lat = lattices[j]
+            
+            # do this upfront, rather than in
+            #x_lat[0::2,:] = pos[0,:]
+            #x_lat[1::2,:] = pos[0,:]
+            #y_lat[0::2,:] = pos[1,:]
+            #y_lat[1::2,:] = pos[1,:]
+            #z_lat[0::2,:] = pos[2,:]
+            #z_lat[1::2,:] = pos[2,:]
+            
         
             # search through each neighbour
-            for k_neigh in range(pos.shape[1]):
+            #for k_neigh in range(pos.shape[1]):
+            for k_neigh in range(0,nVeh):
+                
+                dist = 1000
                 # except for itself (duh):
                 if j != k_neigh:
                     # compute the euc distance between them
                     dist = np.linalg.norm(pos[:,j]-pos[:,k_neigh])
                     # if it is within the interaction range
                     if dist <= r_: 
-                        x_lat[k_neigh,j] = pos[0,k_neigh]
-                        y_lat[k_neigh,j] = pos[1,k_neigh]
-                        z_lat[k_neigh,j] = pos[2,k_neigh]
+                        #x_lat[k_neigh,j] = pos[0,k_neigh]
+                        #y_lat[k_neigh,j] = pos[1,k_neigh]
+                        #z_lat[k_neigh,j] = pos[2,k_neigh]
+                        # first, itself
+                        x_lat[2*k_neigh,j] = pos[0,j]
+                        y_lat[2*k_neigh,j] = pos[1,j]
+                        z_lat[2*k_neigh,j] = pos[2,j]
+                        # then it's neighbour
+                        x_lat[2*k_neigh+1,j] = pos[0,k_neigh]
+                        y_lat[2*k_neigh+1,j] = pos[1,k_neigh]
+                        z_lat[2*k_neigh+1,j] = pos[2,k_neigh]
                     else:
-                        x_lat[k_neigh,j] = pos[0,j]
-                        y_lat[k_neigh,j] = pos[1,j]
-                        z_lat[k_neigh,j] = pos[2,j]
+                        #x_lat[k_neigh,j] = pos[0,j]
+                        #y_lat[k_neigh,j] = pos[1,j]
+                        #z_lat[k_neigh,j] = pos[2,j]
+                        x_lat[2*k_neigh:2*k_neigh+2,j] = pos[0,j]
+                        y_lat[2*k_neigh:2*k_neigh+2,j] = pos[1,j]
+                        z_lat[2*k_neigh:2*k_neigh+2,j] = pos[2,j]
+                        #print('too far')
                 else:
-                    x_lat[k_neigh,j] = pos[0,j]
-                    y_lat[k_neigh,j] = pos[1,j]
-                    z_lat[k_neigh,j] = pos[2,j]                     
+                    #x_lat[k_neigh,j] = pos[0,j]
+                    #y_lat[k_neigh,j] = pos[1,j]
+                    #z_lat[k_neigh,j] = pos[2,j] 
+                    x_lat[2*k_neigh:2*k_neigh+2,j] = pos[0,j]
+                    y_lat[2*k_neigh:2*k_neigh+2,j] = pos[1,j]
+                    z_lat[2*k_neigh:2*k_neigh+2,j] = pos[2,j]  
+                    #print('myself')                                            
+                                                         
             
             temp_lat.set_data(x_lat[:,j], y_lat[:,j])
-            temp_lat.set_3d_properties(z_lat[:,j])   
+            temp_lat.set_3d_properties(z_lat[:,j])  
+        #temp_lat.set_data(x_lat[:,j], y_lat[:,j])
+        #temp_lat.set_3d_properties(z_lat[:,j])  
+
+        #temp_lat.set_data(x_lat[:,:].flatten(), y_lat[:,:].flatten())
+        #temp_lat.set_3d_properties(z_lat[:,:].flatten())   
+        #temp_lat.set_data(x_lat[:,:].transpose().flatten(), y_lat[:,:].transpose().flatten())
+        #temp_lat.set_3d_properties(z_lat[:,:].transpose().flatten())
   
         # plot states... etc
         # ------------------
@@ -294,6 +334,20 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
                 else:
                     temp1.set_color('b')
                     temp2.set_color('b')
+            
+            # if using pinning control
+            # ------------------------
+            if tactic_type == 'pinning':
+            
+                #if pin_matrix[j,j] == 1:
+                if pins_all[i*numFrames,j,j] == 1:
+                    temp1.set_color('r')
+                    temp2.set_color('r') 
+                else:
+                    temp1.set_color('b')
+                    temp2.set_color('b')
+                
+                
                  
         # build obstacles
         # ---------------

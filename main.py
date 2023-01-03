@@ -8,6 +8,7 @@ This project implements an autonomous, decentralized swarming strategies includi
     - Starling flocking
     - Dynamic Encirclement 
     - Leminiscatic Arching
+    - Pinning Control
     - Static Shapes (prototype)
 
 The strategies requires no human invervention once the target is selected and all agents rely on local knowledge only. 
@@ -21,19 +22,11 @@ Created on Tue Dec 22 11:48:18 2020
 
 #%% Import stuff
 # --------------
+
+# official packages 
 #from scipy.integrate import ode
 import numpy as np
-import animation 
-import dynamics_node as node
-import tools as tools
-import encirclement_tools as encircle_tools
-import ctrl_tactic as tactic 
 import pickle 
-#import quaternions as quat
-import lemni_tools 
-import swarm_metrics 
-import staticShapes_tools as statics
-#import starling_tools
 import matplotlib.pyplot as plt
 #plt.style.use('dark_background')
 #plt.style.use('classic')
@@ -41,29 +34,45 @@ plt.style.use('default')
 #plt.style.available
 #plt.style.use('Solarize_Light2')
 
+# from root folder
+import animation 
+import dynamics_node as node
+import ctrl_tactic as tactic 
+
+# utilities 
+from utils import encirclement_tools as encircle_tools
+from utils import staticShapes_tools as statics
+from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, tools, modeller
+
+
 #%% Setup Simulation
 # ------------------
+np.random.seed(0)
 Ti      =   0         # initial time
 Tf      =   30        # final time 
 Ts      =   0.02      # sample time
-nVeh    =   7         # number of vehicles
-iSpread =   15         # initial spread of vehicles
-tSpeed  =   0         # speed of target
-rVeh    =   2         # physical radius of vehicle 
+nVeh    =   5         # number of vehicles
+iSpread =   10         # initial spread of vehicles
+tSpeed  =   0.001         # speed of target
+rVeh    =   1         # physical radius of vehicle 
 
-tactic_type = 'lemni'     
+tactic_type = 'pinning'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # starling = swar like starlings 
                 # circle = encirclement
                 # lemni = dynamic lemniscate
+                # pinning = pinning control
                 # statics = static shapes (prototype)
 
 # if using reynolds, need make target an obstacle 
 if tactic_type == 'reynolds':
     targetObs = 1
 else:
-    targetObs = 0         
+    targetObs = 0    
+    
+# do we want to build a model in real time?
+#real_time_model = 'yes'
 
 # Vehicles states
 # ---------------
@@ -74,7 +83,10 @@ state[2,:] = np.maximum((iSpread*np.random.rand(1,nVeh)-0.5),2)+15  # position (
 state[3,:] = 0                                                      # velocity (vx)
 state[4,:] = 0                                                      # velocity (vy)
 state[5,:] = 0                                                      # velocity (vz)
-centroid = swarm_metrics.centroid(state[0:3,:].transpose())
+centroid = tools.centroid(state[0:3,:].transpose())
+centroid_v = tools.centroid(state[3:6,:].transpose())
+# select a pin (for pinning control)
+pin_matrix = pinning_tools.select_pins_components(state[0:3,:],'gramian')
 
 # Commands
 # --------
@@ -86,9 +98,9 @@ cmd[2] = np.random.rand(1,nVeh)-0.5      # command (z)
 # Targets
 # -------
 targets = 4*(np.random.rand(6,nVeh)-0.5)
-targets[0,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[1,:] = -1 #5*(np.random.rand(1,nVeh)-0.5)
-targets[2,:] = 22
+targets[0,:] = 0 #5*(np.random.rand(1,nVeh)-0.5)
+targets[1,:] = 0 #5*(np.random.rand(1,nVeh)-0.5)
+targets[2,:] = 15
 targets[3,:] = 0
 targets[4,:] = 0
 targets[5,:] = 0
@@ -98,6 +110,10 @@ error = state[0:3,:] - targets[0:3,:]
 # Other Parameters
 # ----------------
 params = np.zeros((4,nVeh))  # store dynamic parameters
+# do I want to model in realtime?
+#if real_time_model == 'yes':
+#    swarm_model = modeller.model()
+
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
@@ -109,7 +125,7 @@ if nObs == 0 and targetObs == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = iSpread
+oSpread = 20
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
@@ -119,18 +135,18 @@ oSpread = iSpread
 
 #random (comment this out if manual)
 if nObs != 0:
-    obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (x)
-    obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)-1                   # position (y)
-    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+15                  # position (z)
+    obstacles[0,:] = oSpread*(np.random.rand(1,nObs)-0.5)+targets[0,0]                   # position (x)
+    obstacles[1,:] = oSpread*(np.random.rand(1,nObs)-0.5)+targets[1,0]                   # position (y)
+    obstacles[2,:] = oSpread*(np.random.rand(1,nObs)-0.5)+targets[2,0]                  # position (z)
     #obstacles[2,:] = np.maximum(oSpread*(np.random.rand(1,nObs)-0.5),14)     # position (z)
-    obstacles[3,:] = np.random.rand(1,nObs)+2                             # radii of obstacle(s)
+    obstacles[3,:] = np.random.rand(1,nObs)+1                             # radii of obstacle(s)
 
 # manually make the first target an obstacle
 if targetObs == 1:
     obstacles[0,0] = targets[0,0]     # position (x)
     obstacles[1,0] = targets[1,0]     # position (y)
     obstacles[2,0] = targets[2,0]     # position (z)
-    obstacles[3,0] = 0.5              # radii of obstacle(s)
+    obstacles[3,0] = 2              # radii of obstacle(s)
 
 # Walls/Floors 
 # - these are defined manually as planes
@@ -181,8 +197,9 @@ obstacles_all       = np.zeros([nSteps, len(obstacles), nObs])
 centroid_all        = np.zeros([nSteps, len(centroid), 1])
 f_all               = np.ones(nSteps)
 lemni_all           = np.zeros([nSteps, nVeh])
-metrics_order_all   = np.zeros((nSteps,5))
-metrics_order       = np.zeros((1,5))
+metrics_order_all   = np.zeros((nSteps,7))
+metrics_order       = np.zeros((1,7))
+pins_all            = np.zeros([nSteps, nVeh, nVeh])
 
 # store the initial conditions
 t_all[0]                = Ti
@@ -195,11 +212,12 @@ f_all[0]                = f
 metrics_order_all[0,:]  = metrics_order
 lemni                   = np.zeros([1, nVeh])
 lemni_all[0,:]          = lemni
+pins_all[0,:,:]         = pin_matrix       
 
 # we need to move the 'target' for mobbing (a type of lemniscate)
 if tactic_type == 'lemni':
     targets = lemni_tools.check_targets(targets)
-
+    
 #%% start the simulation
 # --------------------
 
@@ -207,9 +225,18 @@ while round(t,3) < Tf:
     
     # Evolve the target
     # -----------------
-    targets[0,:] = targets[0,:] + tSpeed*0.002
-    targets[1,:] = targets[1,:] + tSpeed*0.005
-    targets[2,:] = targets[2,:] + tSpeed*0.0005
+    targets[0,:] = 100*np.sin(tSpeed*t)                 # targets[0,:] + tSpeed*0.002
+    targets[1,:] = 100*np.sin(tSpeed*t)*np.cos(tSpeed*t)  # targets[1,:] + tSpeed*0.005
+    targets[2,:] = 100*np.sin(tSpeed*t)*np.sin(tSpeed*t)+15  # targets[2,:] + tSpeed*0.0005
+    
+    # For pinning application, we set the first agent as the "pin",
+    # which means all other targets have to be set to the pin
+    # comment out for non-pinning control
+    # ------------------------------------------------------------
+    #targets[0,1::] = state[0,0]
+    #targets[1,1::] = state[1,0]
+    #targets[2,1::] = state[2,0]
+    
     
     # Update the obstacles (if required)
     # ----------------------------------
@@ -218,11 +245,16 @@ while round(t,3) < Tf:
         obstacles[1,0] = targets[1,0]     # position (y)
         obstacles[2,0] = targets[2,0]     # position (z)
 
+    # modeller: load the current states (x,v), centroid states (x,v) and inputs (of the first agent)
+    # -------------------------------------------------------------------------------
+    #swarm_model.update_stream_x(np.concatenate((np.array(state[0:6,0],ndmin=2).transpose(),centroid, centroid_v, np.array(cmd[0:3,0],ndmin=2).transpose()),axis=0))
+
+
     # Evolve the states
     # -----------------
     state = node.evolve(Ts, state, cmd)
     #state = node.evolve_sat(Ts, state, cmd)
-    
+     
     # Store results
     # -------------
     t_all[i]                = t
@@ -234,6 +266,7 @@ while round(t,3) < Tf:
     f_all[i]                = f
     lemni_all[i,:]          = lemni
     metrics_order_all[i,:]  = metrics_order
+    pins_all[i,:,:]         = pin_matrix  
     
     # Increment 
     # ---------
@@ -244,11 +277,11 @@ while round(t,3) < Tf:
     # --------------------
          
     #if flocking
-    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling':
+    if tactic_type == 'reynolds' or tactic_type == 'saber' or tactic_type == 'starling' or tactic_type == 'pinning':
         trajectory = targets 
     
     # if encircling
-    if tactic_type == 'circle': 
+    if tactic_type == 'circle':
         trajectory, _ = encircle_tools.encircle_target(targets, state)
     
     # if lemniscating
@@ -267,9 +300,19 @@ while round(t,3) < Tf:
     # Compute metrics
     # ---------------
     centroid                = tools.centroid(state[0:3,:].transpose())
+    centroid_v              = tools.centroid(state[3:6,:].transpose())
     swarm_prox              = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
     metrics_order[0,0]      = swarm_metrics.order(states_p)
-    metrics_order[0,1:5]    = swarm_metrics.separation(states_q,targets[0:3,:],obstacles)
+    metrics_order[0,1:7]    = swarm_metrics.separation(states_q,targets[0:3,:],obstacles)
+        
+    # load the updated centroid states (x,v)
+    # ---------------------------------------
+    #swarm_model.update_stream_y(np.concatenate((np.array(state[0:6,0],ndmin=2).transpose(),centroid, centroid_v),axis=0))
+    #if swarm_model.count_y >= swarm_model.desired_size:
+    #    swarm_model.fit()
+    #    swarm_model.count_x    = -1
+    #    swarm_model.count_y    = -1
+
     
     # Add other vehicles as obstacles (optional, default = 0)
     # -------------------------------------------------------
@@ -281,12 +324,32 @@ while round(t,3) < Tf:
             
     #%% Compute the commads (next step)
     # --------------------------------       
-    cmd, params = tactic.commands(states_q, states_p, obstacles_plus, walls, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, params)
+    cmd, params, pin_matrix = tactic.commands(states_q, states_p, obstacles_plus, walls, targets[0:3,:], targets[3:6,:], trajectory[0:3,:], trajectory[3:6,:], swarm_prox, tactic_type, centroid, params)
        
 #%% Produce animation of simulation
 # ---------------------------------
+#print('here1')
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
-ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, tactic_type)    
+ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, tactic_type, pins_all)    
+
+
+#%% Produce plot
+# --------------
+
+fig, ax = plt.subplots()
+ax.plot(t_all[4::],metrics_order_all[4::,1],'-b')
+ax.plot(t_all[4::],metrics_order_all[4::,5],':b')
+ax.plot(t_all[4::],metrics_order_all[4::,6],':b')
+ax.fill_between(t_all[4::], metrics_order_all[4::,5], metrics_order_all[4::,6], color = 'blue', alpha = 0.1)
+#note: can include region to note shade using "where = Y2 < Y1
+ax.set(xlabel='Time [s]', ylabel='Mean Distance to Target [m]',
+       title='Convergence to Target')
+#ax.plot([70, 70], [100, 250], '--b', lw=1)
+#ax.hlines(y=5, xmin=Ti, xmax=Tf, linewidth=1, color='r', linestyle='--')
+ax.grid()
+
+#fig.savefig("test.png")
+plt.show()
 
 #%% Save stuff
 
