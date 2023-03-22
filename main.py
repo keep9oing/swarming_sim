@@ -56,7 +56,7 @@ iSpread =   10         # initial spread of vehicles
 tSpeed  =   0.001         # speed of target
 rVeh    =   1         # physical radius of vehicle 
 
-tactic_type = 'statics'     
+tactic_type = 'pinning'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
                 # saber = Olfati-Saber flocking
                 # starling = swar like starlings 
