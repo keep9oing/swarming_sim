@@ -16,6 +16,7 @@ Created on Tue Mar 21 20:21:07 2023
 import numpy as np
 import random
 from collections import defaultdict
+import heapq 
 
 # parameters
 # ----------
@@ -73,8 +74,38 @@ def search_djikstra(G, source):
     costs = defaultdict(lambda: float('inf'))   # store the cost, with a default value of inf for unexplored nodes
     costs[source] = 0
     que = []                                    # to store cost to the node from the source
+    heapq.heappush(que,(costs[source],source))  # push element into heap in form (cost, node)
+    # note: heap is a binary tree where parents hold smaller values than their children
     
-    
+    # while there are elements in the heap
+    while que:
+        
+        # "i" is the index for the node being explored in here
+        cost_i, i = heapq.heappop(que)          # returns smallest element in heap, then removes it
+        closed.add(i)                           # add this node to the closed set
+        
+        # search through neighbours
+        for neighbour in G[i]:
+            
+            # we'll define each hop with a weight of 1, but this could be distance (later)
+            w = 1
+            
+            # don't explore nodes in closed set
+            if neighbour in closed:
+                continue
+            
+            # update cost
+            cost_update = costs[i] + w
+            
+            # if updated cost is less than current (default to inf, hence defaultdict)
+            if  cost_update < costs[neighbour]:
+                
+                #store the and parents and costs
+                parents[neighbour] = i
+                costs[neighbour] = cost_update
+                # add to heap
+                heapq.heappush(que, (cost_update, neighbour))
+
     return parents, costs
     
 parents, costs = search_djikstra(G, 0)
