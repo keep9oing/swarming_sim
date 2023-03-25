@@ -52,7 +52,6 @@ def build_graph(data):
 
 def search_djikstra(G, source):
     
-    
     closed = set()                              # set of nodes not to visit (or already visited)
     parents = {}                                # stores the path back to source 
     costs = defaultdict(lambda: float('inf'))   # store the cost, with a default value of inf for unexplored nodes
@@ -240,31 +239,7 @@ degree          = deg_matrix(data)
 laplacian       = lap_matrix(adjacency, degree)
 betweennesses   = betweenness(G)
 
-# # select a remove one 
 
-
-# for i in range(0,len(G)):
-    
-#     # initial count of times appearing in  a shortest path
-#     keep_track[i] = 0
-    
-#     for j in range(0,len(G)):
-        
-#         # don't check itself
-#         if i != j:
-            
-#             # count if part of shortest path
-#             count =  Counter(betweennesses[j].values())[i]
-            
-#             # count if i appears in j'th shortest paths
-#             keep_track[i] += count
-            
-#             # note: still need to trace back through parents
-#             #[ within j, count i(as above), then still within j, trace back through parents    ]
-            
-            
-#     keep_track[i] = keep_track[i]/len(betweennesses)
-   
     
     
 

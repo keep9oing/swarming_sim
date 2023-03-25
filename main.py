@@ -43,7 +43,7 @@ import ctrl_tactic as tactic
 from utils import encirclement_tools as encircle_tools
 from utils import staticShapes_tools as statics
 from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, tools, modeller
-
+from utils import graph_tools
 
 #%% Setup Simulation
 # ------------------
@@ -331,6 +331,10 @@ while round(t,3) < Tf:
 #print('here1')
 showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
 ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, tactic_type, pins_all)    
+
+# calculate inbetweenness
+G = graph_tools.build_graph(states_q)
+B = graph_tools.betweenness(G)
 
 
 #%% Produce plot
