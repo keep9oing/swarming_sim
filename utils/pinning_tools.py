@@ -58,7 +58,11 @@ c1_g = 2                # tracking (for the pins)
 c2_g = 2*np.sqrt(2)
 
 # pinning method
-method = 'gramian'
+method = 'between'
+
+    # gramian   = based on controllability
+    # degree    = based on degree centrality 
+    # between   = based on betweenness centrality 
 
 # constants for useful functions
 a   = 5
@@ -252,12 +256,11 @@ def select_pins_components(states_q):
         # for each component
         for i in range(0,len(components)):
             
-            # find the adjacency matrix+ of this component 
+            # find the adjacency and degree matrix of this component 
             states_i = states_q[:,components[i]]
             A = grph.adj_matrix(states_i, rg)
             D = grph.deg_matrix(states_i, rg)
             
-            # find gramian trace (i.e. energy demand) of first component
             index_i = components[i][0]
             
             # if this is a lone agent
@@ -265,10 +268,8 @@ def select_pins_components(states_q):
                 # pin it
                 pin_matrix[index_i,index_i]=1
                 
-            else:
-                    
-                #ctrlable, trace_i = compute_gram_trace(A,D,index_i,A.shape[1])
-                #ctrlable, trace_i = compute_gram_trace(A,D,0,A.shape[1])
+            else: 
+                # find gramian trace (i.e. energy demand) of first component
                 ctrlable, trace_i = grph.compute_gram_trace(A,D,0,A.shape[1])
                 # set a default pin
                 pin_matrix[index_i,index_i]=1
@@ -277,11 +278,6 @@ def select_pins_components(states_q):
                 # cycle through the remaining agents in the component
                 for j in range(1,len(components[i])): 
                     
-                    #print('component: ',i, 'item: ',j,'agent: ',components[i][j])
-                    
-                    # find trace (set horizon to num of agents, for now)
-                    #ctrlable, trace = compute_gram_trace(A,D,components[i][j],A.shape[1])
-                    #ctrlable, trace = compute_gram_trace(A,D,j,A.shape[1])
                     ctrlable, trace = grph.compute_gram_trace(A,D,j,A.shape[1])
                     
                     # take the smallest energy value
@@ -293,7 +289,64 @@ def select_pins_components(states_q):
                         index_i = components[i][j]
                         # pin this one
                         pin_matrix[index_i,index_i]=1
-                                 
+    
+    # Degree method
+    # -------------
+    elif method == 'degree':
+        
+        # for each component
+        for i in range(0,len(components)):
+            
+            # find the adjacency and degree matrix of this component 
+            states_i = states_q[:,components[i]]
+            D = grph.deg_matrix(states_i, rg)
+            
+            index_i = components[i][0]
+            
+            # if this is a lone agent
+            if len(components[i])==1:
+                # pin it
+                pin_matrix[index_i,index_i]=1
+                
+            else: 
+                
+                # find index of highest element of Degree matrix
+                index_i = np.argmax(np.diag(D))
+                # set as default pin
+                pin_matrix[index_i,index_i]=1
+                
+    # Betweenness
+    # -----------
+    
+    # note: for betweenness, we need > 3 agents (source+destination+node)  
+    
+    elif method == 'between':
+        
+        # for each component
+        for i in range(0,len(components)):
+            
+            # default to first node
+            index_i = components[i][0]
+            
+            # if fewer than 4 agents in this component
+            if len(components[i])<=3:
+                # pin the first one
+                pin_matrix[index_i,index_i]=1
+            
+            # else, we have enough to do betweenness
+            else:         
+                # pull out the states for this component 
+                states_i = states_q[:,components[i]]
+                # build a graph within this component (look slighly outside lattice range)
+                G = grph.build_graph(states_i,rg+0.1) 
+                # find the max influencer
+                B = grph.betweenness(G)
+                index_ii = max(B, key=B.get)
+                index_i = components[i][index_ii]
+                # pin the max influencers
+                pin_matrix[index_i,index_i] = 1
+    
+
     else:
         
         for i in range(0,len(components)):
@@ -304,42 +357,7 @@ def select_pins_components(states_q):
 
     return pin_matrix
     
-# #%% compute the controlability Gram trace
-# # -------------------------------------
-# def compute_gram_trace(A,D,node,horizon):
-    
-#     # define B
-#     B = np.zeros((A.shape[0]))
-#     #B = np.ones((A.shape[0]))
-#     B[node] = 1
-    
-#     # discretize (zero order hold)
-#     #Ad = np.eye(A.shape[0],A.shape[0])+A*dt
-#     #Bd = B*dt
-    
-#     # IAW with "transmission" from Appendix of Nozari et al. (2018)
-#     #D_c_in = compute_deg_matrix(A) # inmport this in
-#     A_dyn = np.dot(A,np.linalg.inv(D))
-    
-#     #alpha = 1
-#     #A_dyn = np.exp(alpha*(-np.eye(A.shape[0],A.shape[0])+A))
-    
-#     # compute
-#     C = func_ctrlb(A_dyn,B, horizon)
-#     W = np.dot(C,C.transpose())
-    
-#     #test controlability
-#     rank = np.linalg.matrix_rank(C)
-#     if rank == C.shape[1]:
-#         ctrlable = True
-#     else:
-#         ctrlable = False
-        
-#     # the trace is inversely prop to the energy required to control network
-#     trace = np.matrix.trace(W)
-    
-#     return ctrlable, trace
-          
+
  
 
 

@@ -45,6 +45,29 @@ def build_graph(data, r):
         G[i] = set_i
     return G
 
+# count all
+def build_graph_all(data):
+    G = {}
+    nNodes  = data.shape[1]     # number of agents (nodes)
+    # for each node
+    for i in range(0,nNodes):
+        # create a set of edges
+        set_i = set()
+        # search through neighbours (will add itself)
+        for j in range(0,nNodes):
+            # compute distance
+            dist = np.linalg.norm(data[0:3,j]-data[0:3,i])
+            # if close enough
+            #if dist < r:
+                # add to set_i
+            set_i.add(j)
+            #else:
+            #    print("debug: ", i," is ", dist, "from ", j)
+        G[i] = set_i
+    return G
+
+
+
 #%% Djikstra's shortest path
 # --------------------------
 # accepts a Graph and starting node
