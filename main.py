@@ -43,18 +43,18 @@ import ctrl_tactic as tactic
 from utils import encirclement_tools as encircle_tools
 from utils import staticShapes_tools as statics
 from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, tools, modeller
-from utils import graph_tools
+#from utils import graph_tools
 
 #%% Setup Simulation
 # ------------------
 np.random.seed(0)
 Ti      =   0         # initial time
-Tf      =   60        # final time 
+Tf      =   30        # final time (later, add a condition to break out when desirable conditions are met)
 Ts      =   0.02      # sample time
-nVeh    =   5         # number of vehicles
+nVeh    =   7         # number of vehicles
 iSpread =   10         # initial spread of vehicles
-tSpeed  =   0.001         # speed of target
-rVeh    =   1         # physical radius of vehicle 
+tSpeed  =   0.005         # speed of target
+rVeh    =   0.5         # physical radius of vehicle 
 
 tactic_type = 'pinning'     
                 # reynolds = Reynolds flocking + Olfati-Saber obstacle
@@ -86,7 +86,8 @@ state[5,:] = 0                                                      # velocity (
 centroid = tools.centroid(state[0:3,:].transpose())
 centroid_v = tools.centroid(state[3:6,:].transpose())
 # select a pin (for pinning control)
-pin_matrix = pinning_tools.select_pins_components(state[0:3,:],'gramian')
+#pin_matrix = pinning_tools.select_pins_components(state[0:3,:],'gramian')
+pin_matrix = pinning_tools.select_pins_components(state[0:3,:])
 
 # Commands
 # --------
@@ -329,12 +330,26 @@ while round(t,3) < Tf:
 #%% Produce animation of simulation
 # ---------------------------------
 #print('here1')
-showObs = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
+showObs     = 1 # (0 = don't show obstacles, 1 = show obstacles, 2 = show obstacles + floors/walls)
+# show_B_max  = 1 # highlight the max influencer? (0 = np, 1 = yes)
+# if tactic_type == 'pinning' and show_B_max == 1:
+#     # find the max influencer in the graph
+#     G = graph_tools.build_graph(states_q, 5.1)
+#     B = graph_tools.betweenness(G)
+#     B_max = max(B, key=B.get)
+#     pins_all[:,B_max,B_max] = 2
 ani = animation.animateMe(Ts, t_all, states_all, cmds_all, targets_all[:,0:3,:], obstacles_all, walls_plots, showObs, centroid_all, f_all, tactic_type, pins_all)    
 
+
+#%% Graph analysis
 # calculate inbetweenness
-G = graph_tools.build_graph(states_q)
-B = graph_tools.betweenness(G)
+#G = graph_tools.build_graph(states_q, 6)
+#D = graph_tools.deg_matrix(states_q, 6)
+#A = graph_tools.deg_matrix(states_q, 6)
+#components = graph_tools.find_connected_components_A(A)
+#B = graph_tools.betweenness(G)
+# pull out influncer
+#B_max = max(B, key=B.get)
 
 
 #%% Produce plot

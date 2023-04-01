@@ -17,8 +17,8 @@ Writer = animation.writers['ffmpeg']
 writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 numFrames = 20 # frame rate (bigger = slower)
-tail = 200
-zoom = 1    # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
+tail = 20
+zoom = 0   # do you want to adjust frames with motion? [0 = no, 1 = yes, 2 = fixed (set below), 3 = fixed_zoom (set below) ]
 
 #def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, r_desired, tactic_type):
 def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls_plots, showObs, centroid_all, f, tactic_type, pins_all):
@@ -231,7 +231,7 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
         # else: 
         #     r_ = r_copy*2        # just to help visualize vehicle interactions
         
-        r_ = 1.2*5
+        r_ = 5.1
         
         for j in range (0, nVeh):
         
@@ -343,6 +343,9 @@ def animateMe(Ts, t_all, states_all, cmds_all, targets_all, obstacles_all, walls
                 if pins_all[i*numFrames,j,j] == 1:
                     temp1.set_color('r')
                     temp2.set_color('r') 
+                elif pins_all[i*numFrames,j,j] == 2:
+                    temp1.set_color('c')
+                    temp2.set_color('c') 
                 else:
                     temp1.set_color('b')
                     temp2.set_color('b')

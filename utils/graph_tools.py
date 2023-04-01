@@ -19,13 +19,13 @@ import heapq
 
 # Parameters
 # ----------
-r       = 5
-nNodes  = 10
-data = 10*np.random.rand(3,nNodes)
+#r       = 5
+#nNodes  = 10
+#data = 10*np.random.rand(3,nNodes)
 
 #%% Build Graph (as dictionary)
 # ----------------------------
-def build_graph(data):
+def build_graph(data, r):
     G = {}
     nNodes  = data.shape[1]     # number of agents (nodes)
     # for each node
@@ -98,7 +98,7 @@ def search_djikstra(G, source):
 # ------------------------------
 
 # A = {a_ij} s.t. 1 if i,j are neighbours, 0 if not
-def adj_matrix(data):
+def adj_matrix(data,r):
     # initialize
     nNodes  = data.shape[1]             # number of agents (nodes)
     A       = np.zeros((nNodes,nNodes)) # initialize adjacency matrix as zeros
@@ -123,7 +123,7 @@ def adj_matrix(data):
 #%% Compute the Degree Matrix
 # ------------------------------
 # D = diag{d1,d2,...dN}
-def deg_matrix(data):
+def deg_matrix(data,r):
     # initialize
     nNodes  = data.shape[1]             # number of agents (nodes)
     D       = np.zeros((nNodes,nNodes)) # initialize degree matrix as zeros
@@ -156,6 +156,87 @@ def lap_matrix(A,D):
     # return the matrix
     return L
 
+#%% Compute components
+# --------------------
+def compute_comp(L):
+    eigs = np.linalg.eigvals(L)         # eigen values 
+    # how many components (how many zero eig values)
+    nComp = np.count_nonzero(eigs==0)
+    #print('the graph has ', nComp, ' component(s)')
+    return nComp
+
+
+#%% Compute Augmented Laplacian: The number of null eigen values is 
+#   the number of components in the graph that do not contain pins.
+#   generally, the larger the aug connectivity, the better.
+# ----------------------------------------------------------------- 
+def compute_aug_lap_matrix(L,P,gamma,rho):
+    L_aug = np.multiply(gamma, L) + np.multiply(rho, P)
+    eigs = np.linalg.eigvals(L_aug)         # eigen values
+    # ensure Positive Semi-Definite (all eigen values are >= 0)
+    assert (eigs >= 0).all()
+    # tell me if not fully pinned (i.e. there are null eigen values)
+    if np.count_nonzero(eigs==0) > 0:
+        print('note: graph is not fully pinned')
+    # compute the augmented connectivity (smallest eig value)
+    aug_connectivity = np.amin(eigs)
+    # and the index
+    aug_connectivity_i = np.argmin(eigs)
+    # return the matrix, augmented connectivity, and index
+    return L_aug, aug_connectivity, aug_connectivity_i
+
+
+#%% compute the controlability matrix
+# ---------------------------------
+def func_ctrlb(Ai,Bi,horizon):
+    A = np.mat(Ai)
+    B = np.mat(Bi).transpose()
+    n = horizon
+    #n = A.shape[0]
+    ctrlb = B
+    for i in range(1,n):
+        #ctrlb = np.hstack((ctrlb,A**i*B))
+        ctrlb = np.hstack((ctrlb,np.dot(A**i,B)))
+    return ctrlb
+
+
+#%% compute the controlability Gram trace
+# -------------------------------------
+def compute_gram_trace(A,D,node,horizon):
+    
+    # define B
+    B = np.zeros((A.shape[0]))
+    #B = np.ones((A.shape[0]))
+    B[node] = 1
+    
+    # discretize (zero order hold)
+    #Ad = np.eye(A.shape[0],A.shape[0])+A*dt
+    #Bd = B*dt
+    
+    # IAW with "transmission" from Appendix of Nozari et al. (2018)
+    #D_c_in = compute_deg_matrix(A) # inmport this in
+    A_dyn = np.dot(A,np.linalg.inv(D))
+    
+    #alpha = 1
+    #A_dyn = np.exp(alpha*(-np.eye(A.shape[0],A.shape[0])+A))
+    
+    # compute
+    C = func_ctrlb(A_dyn,B, horizon)
+    W = np.dot(C,C.transpose())
+    
+    #test controlability
+    rank = np.linalg.matrix_rank(C)
+    if rank == C.shape[1]:
+        ctrlable = True
+    else:
+        ctrlable = False
+        
+    # the trace is inversely prop to the energy required to control network
+    trace = np.matrix.trace(W)
+    
+    return ctrlable, trace
+
+
 
 
 #%% compute Betweenness Centrality
@@ -174,7 +255,7 @@ def betweenness(G):
         k += 1
     
     # count all the influencers (i.e. those on shortest paths)
-    influencers = count_influencers(all_paths)
+    influencers = count_influencers(G,all_paths)
     # sum of all paths
     summ = len(G)*(1+len(G))/2
     
@@ -183,7 +264,7 @@ def betweenness(G):
 
 #%% count instances of node appearing in a shortest path
 # ------------------------------------------------------
-def count_influencers(all_paths):
+def count_influencers(G,all_paths):
 
     influencers = defaultdict(lambda: float(0))
     
@@ -229,15 +310,38 @@ def count_influencers(all_paths):
     return influencers 
 
 
+# find connected components
+# -------------------------
+def find_connected_components_A(A):
+    all_components = []                                     # stores all connected components
+    visited = []                                            # stores all visisted nodes
+    for node in range(0,A.shape[1]):                        # search all nodes (breadth)
+        if node not in visited:                             # exclude nodes already visited
+            component       = []                            # stores component nodes
+            candidates = np.nonzero(A[node,:].ravel()==1)[0].tolist()    # create a set of candidates from neighbours 
+            component.append(node)
+            visited.append(node)
+            candidates = list(set(candidates)-set(visited))
+            while candidates:                               # now search depth
+                candidate = candidates.pop(0)               # grab a candidate 
+                visited.append(candidate)                   # it has how been visited 
+                subcandidates = np.nonzero(A[:,candidate].ravel()==1)[0].tolist()
+                component.append(candidate)
+                #component.sort()
+                candidates.extend(list(set(subcandidates)-set(candidates)-set(visited))) # add the unique nodes          
+            all_components.append(component)
+    return all_components
+
+
 #%% testing
 # --------
 
-G               = build_graph(data)
-parents, costs  = search_djikstra(G, 0)
-adjacency       = adj_matrix(data)
-degree          = deg_matrix(data)
-laplacian       = lap_matrix(adjacency, degree)
-betweennesses   = betweenness(G)
+# G               = build_graph(data)
+# parents, costs  = search_djikstra(G, 0)
+# adjacency       = adj_matrix(data)
+# degree          = deg_matrix(data)
+# laplacian       = lap_matrix(adjacency, degree)
+# betweennesses   = betweenness(G)
 
 
     
