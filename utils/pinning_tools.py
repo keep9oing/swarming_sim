@@ -30,6 +30,8 @@ Dev notes:
     
     01 Apr 2023 - build up cap/exp to compare ctrb grammian vs degree vs betweeness driver node
         in the context of autonmous assembly of the swarm (i.e. components)
+    01 Apr 2023 - should components be drawn to eachother or target?
+     - maybe a component is a pin as well? yes! The pins are drawn to meta-pins.
     
 """
 
