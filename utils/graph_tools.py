@@ -4,11 +4,18 @@
 Created on Tue Mar 21 20:21:07 2023
 
 @author: tjards
+
+Preliminaries:
+    - Let us consider V nodes (vertices, agents)
+    - Define E is a set of edges (links) as the set of ordered pairs
+    from the Cartesian Product V x V, E = {(a,b) | a /in V and b /in V}
+    - Then we consider Graph, G = {V,E} (nodes and edges)
+    - G is simple: (a,a) not \in E \forall a \in V 
+    - G is undirected: (a,b) \in E <=> (b,a) \in E
+    - Nodes i,j are neighbours if they share an edge, (i,j) /in E
+    - d1=|N_1| is the degree of Node 1, or, the number of neighbours
+
 """
-
-# betweenness centrality: expresses the significance of a node to network connectivity
-#   count the number of times a node appears on the shortest path between any two other vertices
-
 
 # Import stuff
 # ------------

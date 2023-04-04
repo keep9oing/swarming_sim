@@ -32,6 +32,9 @@ Dev notes:
         in the context of autonmous assembly of the swarm (i.e. components)
     01 Apr 2023 - should components be drawn to eachother or target?
      - maybe a component is a pin as well? yes! The pins are drawn to meta-pins.
+    03 Apr 2023 - add heuristic to the betweenness Djikstra for moving towards other components during merge?
+    03 Apr 2023 - focus on low degree centrality nodes as drivers? low betweenness? hmm... invert typical logic
+    
     
 """
 
