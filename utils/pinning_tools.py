@@ -346,7 +346,8 @@ def select_pins_components(states_q):
                 G = grph.build_graph(states_i,rg+0.1) 
                 # find the max influencer
                 B = grph.betweenness(G)
-                index_ii = max(B, key=B.get)
+                #index_ii = max(B, key=B.get)
+                index_ii = min(B, key=B.get)
                 index_i = components[i][index_ii]
                 # pin the max influencers
                 pin_matrix[index_i,index_i] = 1
