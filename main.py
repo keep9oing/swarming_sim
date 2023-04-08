@@ -47,11 +47,11 @@ from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, too
 
 #%% Setup Simulation
 # ------------------
-#np.random.seed(1)
+np.random.seed(1)
 Ti      =   0         # initial time
-Tf      =   50        # final time (later, add a condition to break out when desirable conditions are met)
+Tf      =   60        # final time (later, add a condition to break out when desirable conditions are met)
 Ts      =   0.02      # sample time
-nVeh    =   30         # number of vehicles
+nVeh    =   7         # number of vehicles
 iSpread =   20         # initial spread of vehicles
 tSpeed  =   0 #0.005         # speed of target
 rVeh    =   0.5         # physical radius of vehicle 
@@ -121,7 +121,7 @@ params = np.zeros((4,nVeh))  # store dynamic parameters
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs    = 10     # number of obstacles 
+nObs    = 0     # number of obstacles 
 vehObs  = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
 
 # there are no obstacle, but we need to make target an obstacle 

@@ -34,7 +34,7 @@ Dev notes:
      - maybe a component is a pin as well? yes! The pins are drawn to meta-pins.
     03 Apr 2023 - add heuristic to the betweenness Djikstra for moving towards other components during merge?
     03 Apr 2023 - focus on low degree centrality nodes as drivers? low betweenness? hmm... invert typical logic
-    
+    08 Apr 2023 - there is a lot of inefficiency in below, move the A,D,G calcs outside the loops
     
 """
 
@@ -63,9 +63,9 @@ c1_g = 2                # tracking (for the pins)
 c2_g = 2*np.sqrt(2)
 
 # pinning method
-method = 'degree'
+method = 'between'
 
-    # gramian   = based on controllability
+    # gramian   = based on controllability gramian
     # degree    = based on degree centrality 
     # between   = based on betweenness centrality 
 
@@ -263,7 +263,7 @@ def select_pins_components(states_q):
             
             # find the adjacency and degree matrix of this component 
             states_i = states_q[:,components[i]]
-            A = grph.adj_matrix(states_i, rg)
+            A = grph.adj_matrix(states_i, rg)  # move these outside (efficiency)
             D = grph.deg_matrix(states_i, rg)
             
             index_i = components[i][0]
@@ -346,8 +346,8 @@ def select_pins_components(states_q):
                 G = grph.build_graph(states_i,rg+0.1) 
                 # find the max influencer
                 B = grph.betweenness(G)
-                #index_ii = max(B, key=B.get)
-                index_ii = min(B, key=B.get)
+                index_ii = max(B, key=B.get)
+                #index_ii = min(B, key=B.get)
                 index_i = components[i][index_ii]
                 # pin the max influencers
                 pin_matrix[index_i,index_i] = 1
