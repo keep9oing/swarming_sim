@@ -47,13 +47,13 @@ from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, too
 
 #%% Setup Simulation
 # ------------------
-np.random.seed(1)
+#np.random.seed(1)
 Ti      =   0         # initial time
 Tf      =   50        # final time (later, add a condition to break out when desirable conditions are met)
 Ts      =   0.02      # sample time
-nVeh    =   20         # number of vehicles
-iSpread =   40         # initial spread of vehicles
-tSpeed  =   0.005         # speed of target
+nVeh    =   30         # number of vehicles
+iSpread =   20         # initial spread of vehicles
+tSpeed  =   0 #0.005         # speed of target
 rVeh    =   0.5         # physical radius of vehicle 
 
 tactic_type = 'pinning'     
@@ -87,7 +87,10 @@ centroid = tools.centroid(state[0:3,:].transpose())
 centroid_v = tools.centroid(state[3:6,:].transpose())
 # select a pin (for pinning control)
 #pin_matrix = pinning_tools.select_pins_components(state[0:3,:],'gramian')
-pin_matrix = pinning_tools.select_pins_components(state[0:3,:])
+
+pin_matrix = np.zeros((nVeh,nVeh))
+if tactic_type == 'pinning':
+    pin_matrix = pinning_tools.select_pins_components(state[0:3,:])
 
 # Commands
 # --------
@@ -118,7 +121,7 @@ params = np.zeros((4,nVeh))  # store dynamic parameters
 
 #%% Define obstacles (kind of a manual process right now)
 # ------------------------------------------------------
-nObs    = 0     # number of obstacles 
+nObs    = 10     # number of obstacles 
 vehObs  = 0     # include other vehicles as obstacles [0 = no, 1 = yes] 
 
 # there are no obstacle, but we need to make target an obstacle 
@@ -126,7 +129,7 @@ if nObs == 0 and targetObs == 1:
     nObs = 1
 
 obstacles = np.zeros((4,nObs))
-oSpread = 20
+oSpread = 10
 
 # manual (comment out if random)
 # obstacles[0,:] = 0    # position (x)
