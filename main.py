@@ -49,11 +49,11 @@ from utils import pinning_tools, lemni_tools, starling_tools, swarm_metrics, too
 # ------------------
 np.random.seed(1)
 Ti      =   0         # initial time
-Tf      =   60        # final time (later, add a condition to break out when desirable conditions are met)
+Tf      =   30        # final time (later, add a condition to break out when desirable conditions are met)
 Ts      =   0.02      # sample time
-nVeh    =   7         # number of vehicles
+nVeh    =   15         # number of vehicles
 iSpread =   20         # initial spread of vehicles
-tSpeed  =   0 #0.005         # speed of target
+tSpeed  =   0.005         # speed of target
 rVeh    =   0.5         # physical radius of vehicle 
 
 tactic_type = 'pinning'     
@@ -201,8 +201,11 @@ obstacles_all       = np.zeros([nSteps, len(obstacles), nObs])
 centroid_all        = np.zeros([nSteps, len(centroid), 1])
 f_all               = np.ones(nSteps)
 lemni_all           = np.zeros([nSteps, nVeh])
-metrics_order_all   = np.zeros((nSteps,7))
-metrics_order       = np.zeros((1,7))
+# metrics_order_all   = np.zeros((nSteps,7))
+# metrics_order       = np.zeros((1,7))
+nMetrics            = 12 # there are 11 positions being used.    
+metrics_order_all   = np.zeros((nSteps,nMetrics))
+metrics_order       = np.zeros((1,nMetrics))
 pins_all            = np.zeros([nSteps, nVeh, nVeh])
 
 # store the initial conditions
@@ -308,6 +311,9 @@ while round(t,3) < Tf:
     swarm_prox              = tools.sigma_norm(centroid.ravel()-targets[0:3,0])
     metrics_order[0,0]      = swarm_metrics.order(states_p)
     metrics_order[0,1:7]    = swarm_metrics.separation(states_q,targets[0:3,:],obstacles)
+    metrics_order[0,7:9]    = swarm_metrics.energy(cmd)
+    metrics_order[0,9:12]   = swarm_metrics.spacing(states_q)
+        
         
     # load the updated centroid states (x,v)
     # ---------------------------------------
